@@ -1,9 +1,11 @@
+import { useAuth } from "../context/AuthContext";
 import AppNavigator from "./AppNavigator";
 import AuthNavigator from "./AuthNavigator";
 
 export default function RootNavigator() {
-    const isLoggedIn = false; // replace later
+    const { firebaseUser, loading } = useAuth();
 
-    return isLoggedIn ? <AppNavigator /> : <AuthNavigator />;
+    if (loading) return null;
 
+    return firebaseUser ? <AppNavigator /> : <AuthNavigator />;
 }
