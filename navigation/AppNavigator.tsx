@@ -1,9 +1,10 @@
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { View } from "react-native";
-import HitListScreen from "../screens/authenticated/HitListScreen.tsx";
-import HomeScreen from "../screens/authenticated/HomeScreen.tsx";
-import LockInScreen from "../screens/authenticated/LockInScreen.tsx";
-import ProfileScreen from "../screens/authenticated/ProfileScreen.tsx";
+import NavBar from "../components/NavBar";
+import HitListScreen from "../screens/authenticated/HitListScreen";
+import HomeScreen from "../screens/authenticated/HomeScreen";
+import LockInScreen from "../screens/authenticated/LockInScreen";
+import ProfileScreen from "../screens/authenticated/ProfileScreen";
 
 const Stack = createNativeStackNavigator();
 
