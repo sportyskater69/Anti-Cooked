@@ -1,21 +1,27 @@
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
-import HitListScreen from "../screens/authenticated/HitListScreen.tsx";
-import HomeScreen from "../screens/authenticated/HomeScreen.tsx";
-import LockInScreen from "../screens/authenticated/LockInScreen.tsx";
-import ProfileScreen from "../screens/authenticated/ProfileScreen.tsx";
+import { View } from "react-native";
+import NavBar from "../components/NavBar";
+import HitListScreen from "../screens/authenticated/HitListScreen";
+import HomeScreen from "../screens/authenticated/HomeScreen";
+import LockInScreen from "../screens/authenticated/LockInScreen";
+import ProfileScreen from "../screens/authenticated/ProfileScreen";
 
 const Stack = createNativeStackNavigator();
 
 export default function AppNavigator() {
     return (
-        <Stack.Navigator
-            screenOptions={{
-                headerShown: false,
-            }}>
-            <Stack.Screen name="Homescreen" component={HomeScreen} />
-            <Stack.Screen name="Hitlist" component={HitListScreen} />
-            <Stack.Screen name="Lockin" component={LockInScreen} />
-            <Stack.Screen name="Profile" component={ProfileScreen} />
-        </Stack.Navigator>
+        <View style={{ flex: 1 }}>
+            <Stack.Navigator
+                screenOptions={{
+                    headerShown: false,
+                }}>
+                <Stack.Screen name="Homescreen" component={HomeScreen} />
+                <Stack.Screen name="Hitlist" component={HitListScreen} />
+                <Stack.Screen name="Lockin" component={LockInScreen} />
+                <Stack.Screen name="Profile" component={ProfileScreen} />
+            </Stack.Navigator>
+
+            <NavBar />
+        </View>
     );
 }
