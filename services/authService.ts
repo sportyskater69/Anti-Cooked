@@ -1,8 +1,11 @@
 import type { User } from "firebase/auth";
-import { createUserWithEmailAndPassword, getAuth, signInWithEmailAndPassword, signOut } from "firebase/auth";
+import {
+    createUserWithEmailAndPassword,
+    signInWithEmailAndPassword,
+    signOut,
+} from "firebase/auth";
+import { auth } from "../config/firebaseConfig";
 
-
-const auth = getAuth();
 
 export const logIn = async (email: string, password: string): Promise<User> => {
     try {
