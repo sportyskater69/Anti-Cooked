@@ -2,8 +2,9 @@ import { useFormik } from "formik";
 import * as Yup from "yup";
 
 import { Inter_400Regular, Inter_600SemiBold } from '@expo-google-fonts/inter';
-import { NotoSerif_700Bold, useFonts } from '@expo-google-fonts/noto-serif';
+import { NotoSerif_700Bold } from '@expo-google-fonts/noto-serif';
 import { useNavigation } from '@react-navigation/native';
+import { useFonts } from 'expo-font';
 import { LinearGradient } from 'expo-linear-gradient';
 import React, { useEffect, useRef, useState } from 'react';
 import {
