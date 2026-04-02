@@ -23,6 +23,7 @@ import DateTimePicker from "@react-native-community/datetimepicker";
 import ScreenWrapper from "../../components/ScreenWrapper";
 import { addTask, getTasksByDate, toggleTask } from "../../services/taskService";
 
+import { useDateStore } from "../../store/dateStore";
 import { Task } from "../../types/Task";
 
 export default function HitListScreen() {
@@ -72,6 +73,8 @@ export default function HitListScreen() {
         const data = await getTasksByDate(selectedDate);
         setTasks(data);
     };
+
+    const setSelectedDate = useDateStore((state) => state.setSelectedDate);
 
     const formatDateTime = (input: any) => {
         const d = input?.toDate?.() ?? new Date(input);
@@ -134,7 +137,8 @@ export default function HitListScreen() {
 
                                     ]}
                                     onPress={() => {
-                                        // later: setSelectedDate(day)
+                                        const formattedDate = day.toISOString().split("T")[0];
+                                        setSelectedDate(formattedDate);
                                     }}
                                 >
                                     <Text

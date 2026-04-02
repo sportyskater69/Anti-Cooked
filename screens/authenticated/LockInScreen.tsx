@@ -10,10 +10,14 @@ import {
     useFonts
 } from "@expo-google-fonts/noto-serif";
 
+import { useRoute } from "@react-navigation/native";
 import { useCallback, useEffect, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { getTasksByDate, toggleTask } from "../../services/taskService";
 import { Task } from "../../types/Task";
+
+
+import { useDateStore } from "../../store/dateStore";
 
 export default function LockInScreen() {
     const [fontsLoaded] = useFonts({
@@ -23,8 +27,12 @@ export default function LockInScreen() {
         NotoSerif_700Bold,
     });
 
+    const route = useRoute<any>();
 
-    const [selectedDate] = useState("2026-01-23");
+    const selectedDate = useDateStore((state) => state.selectedDate);
+    const setSelectedDate = useDateStore((state) => state.setSelectedDate);
+
+
 
     const [tasks, setTasks] = useState<Task[]>([]);
 
@@ -34,13 +42,9 @@ export default function LockInScreen() {
     }, [selectedDate]);
 
     useEffect(() => {
-        const load = async () => {
-            const data = await getTasksByDate(selectedDate);
-            setTasks(data);
-        };
-
         load();
-    }, [selectedDate]);
+    }, [load]);
+
 
     const sortedTasks = [...tasks].sort((a, b) => {
         const aCompleted = a.completed ? 1 : 0;
