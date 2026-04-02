@@ -1,6 +1,7 @@
 import "@expo-google-fonts/inter";
 // not sure how to implement inter as well as noto serif
 import ScreenWrapper from "../../components/ScreenWrapper";
+import TimelineItem from "../../components/TimelineItem";
 
 import {
     NotoSerif_400Regular,
@@ -47,64 +48,28 @@ export default function LockInScreen() {
                     </View>
                     <View style={styles.achivementTimeline}>
                         <Text style={styles.achivementTimelineText}>Achievement Timeline</Text>
-                        {/*Item 1*/}
-                        <View style={styles.progressRow}>
-                            <View style={styles.leftSide} />
-                            <View style={styles.circle} />
-                            <View style={styles.line} />
-                        </View>
 
-                        <View style={styles.rightSide}>
-                            <Text style={styles.title3}>Philosophy Thesis Draft</Text>
-                            <Text style={styles.desc}>
-                                Completed advanced synthesis of Stoic principles.
-                            </Text>
-                            {/* In every item the date field will be filled based on the date priority objectives in the hit list. */}
-                            <Text style={styles.date2}>OCT 24, 2023</Text>
-                        </View>
+                        <TimelineItem
+                            title="Philosophy Thesis Draft"
+                            description="Completed advanced synthesis of Stoic principles."
+                            date="OCT 24, 2023"
+                            completed={true}
+                        />
 
-                        {/*Item 2*/}
-                        <View style={styles.progressRow}>
-                            <View style={styles.leftSide}>
-                                <View style={styles.circle} />
-                                <View style={styles.line} />
-                            </View>
-                        </View>
+                        <TimelineItem
+                            title="Renaissance Art Portfolio"
+                            description="Analyzed Chiaroscuro technique in 12 works."
+                            date="OCT 24, 2023"
+                            completed={false}
+                        />
 
-                        <View style={styles.rightSide}>
-                            <Text style={styles.title2}>Renaissance Art Portfolio</Text>
-                            <Text style={styles.desc}>
-                                Analyzed the Chiaroscuro technique in 12 works.
-                            </Text>
-                            <Text style={styles.date}>OCT 24, 2023</Text>
-                        </View>
-
-                        {/*Item 3*/}
-                        <View style={styles.progressRow}>
-                            <View style={styles.leftSide}>
-                                <View style={styles.circle} />
-                                <View style={styles.line} />
-                            </View>
-                        </View>
-
-                        <View style={styles.rightSide}>
-                            <Text style={styles.title2}>Weekly Logic Seminar</Text>
-                            <Text style={styles.desc}>
-                                Perfect score on the syllogism challenge.
-                            </Text>
-                            <Text style={styles.date}>OCT 24, 2023</Text>
-                        </View>
-
-                        <View style={styles.rewardField}>
-                            <Text style={styles.rewardText}>Rewards and Emblems</Text>
-                            <View style={styles.reward} >
-                                <View style={styles.totalPoints}>
-                                    <Text style={styles.point}>450</Text>
-                                    <Text style={styles.pts}>PTS</Text>
-                                </View>
-                            </View>
-                        </View>
-
+                        <TimelineItem
+                            title="Weekly Logic Seminar"
+                            description="Perfect score on syllogism challenge."
+                            date="OCT 24, 2023"
+                            completed={false}
+                            isLast
+                        />
                     </View>
                 </View>
             </ScrollView>
