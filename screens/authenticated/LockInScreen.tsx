@@ -1,3 +1,4 @@
+
 import "@expo-google-fonts/inter";
 import ScreenWrapper from "../../components/ScreenWrapper";
 import TimelineItem from "../../components/TimelineItem";
@@ -152,10 +153,12 @@ export default function LockInScreen() {
                 </View>
             </ScrollView>
         </ScreenWrapper>
+
     );
 }
 
 const styles = StyleSheet.create({
+
     title: {
         flex: 1,
         alignItems: 'center',
@@ -370,4 +373,5 @@ const styles = StyleSheet.create({
     rewardField: {
         marginTop: 120,
     }
+
 });
