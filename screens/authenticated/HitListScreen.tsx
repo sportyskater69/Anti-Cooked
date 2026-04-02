@@ -36,6 +36,25 @@ export default function HitListScreen() {
 
     const [selectedDate] = useState("2026-01-23");
 
+    const generateMonthDays = (baseDate: Date) => {
+        const start = new Date(baseDate.getFullYear(), baseDate.getMonth(), 1);
+        const end = new Date(baseDate.getFullYear(), baseDate.getMonth() + 2, 0); // +1 month view
+
+        const days: Date[] = [];
+
+        const current = new Date(start);
+
+        while (current <= end) {
+            days.push(new Date(current));
+            current.setDate(current.getDate() + 1);
+        }
+
+        return days;
+    };
+
+    const [calendarBase] = useState(new Date());
+    const calendarDays = generateMonthDays(calendarBase);
+
     const [tasks, setTasks] = useState<Task[]>([]);
 
     const [fontsLoaded] = useFonts({
@@ -99,7 +118,36 @@ export default function HitListScreen() {
                     </View>
 
                     {/* CALENDAR */}
-                    <View style={styles.calender} />
+                    <ScrollView
+                        horizontal
+                        showsHorizontalScrollIndicator={false}
+                        contentContainerStyle={styles.calender}
+                    >
+                        {calendarDays.map((day, index) => {
+                            const isToday =
+                                new Date().toDateString() === day.toDateString();
+
+                            return (
+                                <Pressable
+                                    key={index}
+                                    style={[
+
+                                    ]}
+                                    onPress={() => {
+                                        // later: setSelectedDate(day)
+                                    }}
+                                >
+                                    <Text
+                                        style={[
+
+                                        ]}
+                                    >
+                                        {day.getDate()}
+                                    </Text>
+                                </Pressable>
+                            );
+                        })}
+                    </ScrollView>
 
                     {/* TITLE */}
                     <View style={styles.title2}>

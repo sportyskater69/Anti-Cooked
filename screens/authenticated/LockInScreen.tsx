@@ -11,7 +11,7 @@ import {
 } from "@expo-google-fonts/noto-serif";
 
 import { useCallback, useEffect, useState } from "react";
-import { ScrollView, StyleSheet, Text, View } from "react-native";
+import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { getTasksByDate, toggleTask } from "../../services/taskService";
 import { Task } from "../../types/Task";
 
@@ -24,8 +24,7 @@ export default function LockInScreen() {
     });
 
 
-    // 👇 future: replace with real selected date logic
-    const [selectedDate] = useState("2023-10-24");
+    const [selectedDate] = useState("2026-01-23");
 
     const [tasks, setTasks] = useState<Task[]>([]);
 
@@ -35,10 +34,6 @@ export default function LockInScreen() {
     }, [selectedDate]);
 
     useEffect(() => {
-        load();
-    }, [load]);
-
-    useEffect(() => {
         const load = async () => {
             const data = await getTasksByDate(selectedDate);
             setTasks(data);
@@ -46,6 +41,38 @@ export default function LockInScreen() {
 
         load();
     }, [selectedDate]);
+
+    const sortedTasks = [...tasks].sort((a, b) => {
+        const aCompleted = a.completed ? 1 : 0;
+        const bCompleted = b.completed ? 1 : 0;
+
+        // Completed first
+        if (aCompleted !== bCompleted) return bCompleted - aCompleted;
+
+        // Then sort by createdAt
+        const aTime = (a.createdAt as any)?.seconds ?? a.createdAt;
+        const bTime = (b.createdAt as any)?.seconds ?? b.createdAt;
+
+        return aTime - bTime;
+    });
+
+    const checkOffNextTask = async () => {
+        // find oldest incomplete task
+        const incompleteTasks = tasks
+            .filter(t => !t.completed)
+            .sort((a, b) => {
+                const aTime = (a.createdAt as any)?.seconds ?? a.createdAt;
+                const bTime = (b.createdAt as any)?.seconds ?? b.createdAt;
+                return aTime - bTime;
+            });
+
+        if (incompleteTasks.length === 0) return;
+
+        const nextTask = incompleteTasks[0];
+
+        await toggleTask(nextTask.id, nextTask.completed);
+        load();
+    };
 
     if (!fontsLoaded) return null;
 
@@ -83,18 +110,45 @@ export default function LockInScreen() {
                             Achievement Timeline
                         </Text>
 
-                        {tasks.map((item, index) => (
-                            <TimelineItem
-                                key={item.id}
-                                task={item}
-                                isLast={index === tasks.length - 1}
-                                onPress={async () => {
-                                    await toggleTask(item.id, item.completed);
-                                    load();
-                                }}
-                            />
-                        ))}
+                        <ScrollView
+                            style={{ marginTop: 10 }}
+                            contentContainerStyle={{ paddingBottom: 40 }}
+                            showsVerticalScrollIndicator={false}
+                        >
+                            {sortedTasks.map((item, index) => (
+                                <TimelineItem
+                                    key={item.id}
+                                    task={item}
+                                    isLast={index === sortedTasks.length - 1}
+                                    onPress={async () => {
+                                        await toggleTask(item.id, item.completed);
+                                        load();
+                                    }}
+                                />
+                            ))}
+                        </ScrollView>
                     </View>
+
+                    <Pressable
+                        onPress={checkOffNextTask}
+                        style={{
+                            width: "80%",
+                            height: 55,
+                            backgroundColor: "#C99F7A",
+                            borderRadius: 30,
+                            justifyContent: "center",
+                            alignItems: "center",
+                            marginTop: 20,
+                        }}
+                    >
+                        <Text style={{
+                            fontFamily: "NotoSerif_700Bold",
+                            fontSize: 18,
+                            color: "#211A16"
+                        }}>
+                            Check Off
+                        </Text>
+                    </Pressable>
                 </View>
             </ScrollView>
         </ScreenWrapper>
@@ -209,7 +263,8 @@ const styles = StyleSheet.create({
         height: 545,
         borderRadius: 48,
         backgroundColor: '#211A16',
-        marginTop: 40
+        marginTop: 40,
+        overflow: "hidden"
     },
 
     achivementTimelineText: {
