@@ -1,4 +1,3 @@
-
 import "@expo-google-fonts/inter";
 import {
     NotoSerif_400Regular,
@@ -296,7 +295,7 @@ export default function HitListScreen() {
                                 value={dueDate}
                                 mode="datetime"
                                 display="default"
-                                onChange={(event: any, selectedDate: any) => {
+                                onChange={(event, selectedDate) => {
                                     setShowPicker(false);
                                     if (selectedDate) setDueDate(selectedDate);
                                 }}
@@ -336,12 +335,10 @@ export default function HitListScreen() {
             </Modal>
 
         </ScreenWrapper>
-
     );
 }
 
 const styles = StyleSheet.create({
-
     page: {
         backgroundColor: '#43352E',
     },
