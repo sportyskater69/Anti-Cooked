@@ -1,5 +1,4 @@
 import "@expo-google-fonts/inter";
-// not sure how to implement inter as well as noto serif
 import ScreenWrapper from "../../components/ScreenWrapper";
 import TimelineItem from "../../components/TimelineItem";
 
@@ -9,9 +8,13 @@ import {
     NotoSerif_700Bold,
     NotoSerif_800ExtraBold,
     useFonts
-} from '@expo-google-fonts/noto-serif';
+} from "@expo-google-fonts/noto-serif";
 
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useCallback, useEffect, useState } from "react";
+import { ScrollView, StyleSheet, Text, View } from "react-native";
+import { getTasksByDate, toggleTask } from "../../services/taskService";
+import { Task } from "../../types/Task";
+
 export default function LockInScreen() {
     const [fontsLoaded] = useFonts({
         NotoSerif_400Regular,
@@ -20,56 +23,77 @@ export default function LockInScreen() {
         NotoSerif_700Bold,
     });
 
-    if (!fontsLoaded) {
-        return null;
-    }
-    // add coffee mug to the next up field 
-    // add the timer functionality, 25 shouldnt be hardcoded
+
+    // 👇 future: replace with real selected date logic
+    const [selectedDate] = useState("2023-10-24");
+
+    const [tasks, setTasks] = useState<Task[]>([]);
+
+    const load = useCallback(async () => {
+        const data = await getTasksByDate(selectedDate);
+        setTasks(data);
+    }, [selectedDate]);
+
+    useEffect(() => {
+        load();
+    }, [load]);
+
+    useEffect(() => {
+        const load = async () => {
+            const data = await getTasksByDate(selectedDate);
+            setTasks(data);
+        };
+
+        load();
+    }, [selectedDate]);
+
+    if (!fontsLoaded) return null;
+
     return (
         <ScreenWrapper>
             <ScrollView contentContainerStyle={styles.page}>
                 <View style={styles.title}>
-                    <View><Text style={styles.text}>Lock - in Mode</Text></View>
+
+                    <Text style={styles.text}>Lock - in Mode</Text>
+
                     <View style={styles.box}>
-                        <Text style={styles.deepwork} >DEEP WORK SESSION</Text>
+                        <Text style={styles.deepwork}>DEEP WORK SESSION</Text>
                         <Text style={styles.essay}>Philosophy Essay</Text>
                         <Text style={styles.min}>25:00</Text>
+
                         <View style={styles.nextup}>
-                            <Text style={styles.nextuptext}> Next up : 5 min Short Break</Text>
+                            <Text style={styles.nextuptext}>
+                                Next up : 5 min Short Break
+                            </Text>
                         </View>
                     </View>
+
                     <View style={styles.buttonRow}>
                         <View style={styles.commenceFocus}>
                             <Text style={styles.commenceFocusText}>Commence Focus</Text>
                         </View>
+
                         <View style={styles.resetSession}>
                             <Text style={styles.resetSessionText}>Reset Session</Text>
                         </View>
                     </View>
+
                     <View style={styles.achivementTimeline}>
-                        <Text style={styles.achivementTimelineText}>Achievement Timeline</Text>
+                        <Text style={styles.achivementTimelineText}>
+                            Achievement Timeline
+                        </Text>
 
-                        <TimelineItem
-                            title="Philosophy Thesis Draft"
-                            description="Completed advanced synthesis of Stoic principles."
-                            date="OCT 24, 2023"
-                            completed={true}
-                        />
-
-                        <TimelineItem
-                            title="Renaissance Art Portfolio"
-                            description="Analyzed Chiaroscuro technique in 12 works."
-                            date="OCT 24, 2023"
-                            completed={false}
-                        />
-
-                        <TimelineItem
-                            title="Weekly Logic Seminar"
-                            description="Perfect score on syllogism challenge."
-                            date="OCT 24, 2023"
-                            completed={false}
-                            isLast
-                        />
+                        {tasks.map((item, index) => (
+                            <TimelineItem
+                                key={item.id}
+                                task={item}
+                                isLast={index === tasks.length - 1}
+                                onPress={async () => {
+                                    await toggleTask(item.id, item.completed);
+                                    load();
+                                }}
+                            />
+                        ))}
                     </View>
                 </View>
             </ScrollView>

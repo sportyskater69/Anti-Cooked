@@ -1,50 +1,44 @@
 import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Task } from "../types/Task";
 
 type Props = {
-    title: string;
-    description: string;
-    date: string;
-    completed: boolean;
+    task: Task;
     isLast?: boolean;
     onPress?: () => void;
 };
 
-export default function TimelineItem({
-    title,
-    description,
-    date,
-    completed,
-    isLast,
-    onPress,
-}: Props) {
+export default function TimelineItem({ task, isLast, onPress }: Props) {
     return (
         <View style={styles.row}>
 
-            {/* LEFT SIDE (circle + line) */}
+            {/* LEFT SIDE */}
             <View style={styles.left}>
 
-                <Pressable onPress={onPress} style={[
-                    styles.circle,
-                    completed ? styles.circleDone : styles.circlePending
-                ]}>
-                    {completed && <Text style={styles.check}>✓</Text>}
+                <Pressable
+                    onPress={onPress}
+                    style={[
+                        styles.circle,
+                        task.completed ? styles.circleDone : styles.circlePending
+                    ]}
+                >
+                    {task.completed && <Text style={styles.check}>✓</Text>}
                 </Pressable>
 
-                {/* connector line */}
                 {!isLast && (
                     <View style={[
                         styles.line,
-                        completed ? styles.lineDone : styles.linePending
+                        task.completed ? styles.lineDone : styles.linePending
                     ]} />
                 )}
-
             </View>
 
-            {/* RIGHT SIDE CONTENT */}
+            {/* RIGHT SIDE */}
             <View style={styles.right}>
-                <Text style={styles.title}>{title}</Text>
-                <Text style={styles.desc}>{description}</Text>
-                <Text style={styles.date}>{date}</Text>
+                <Text style={styles.title}>{task.title}</Text>
+                <Text style={styles.desc}>{task.description}</Text>
+                <Text style={styles.date}>
+                    {new Date(task.dueAt as any).toDateString()}
+                </Text>
             </View>
 
         </View>

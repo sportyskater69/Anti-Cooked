@@ -5,171 +5,289 @@ import {
     NotoSerif_700Bold,
     NotoSerif_800ExtraBold,
     useFonts
-} from '@expo-google-fonts/noto-serif';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+} from "@expo-google-fonts/noto-serif";
+
+import { useEffect, useState } from "react";
+import {
+    Modal,
+    Pressable,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TextInput,
+    View
+} from "react-native";
+
+import DateTimePicker from "@react-native-community/datetimepicker";
+
 import ScreenWrapper from "../../components/ScreenWrapper";
-// not sure how to implement inter at the same time as noto serif
-{/** add inter to a lot of field and import inter fontweights */ }
+import { addTask, getTasksByDate, toggleTask } from "../../services/taskService";
 
+import { Task } from "../../types/Task";
 
-export default function LockInScreen() {
+export default function HitListScreen() {
+
+    const [modalVisible, setModalVisible] = useState(false);
+
+    const [taskName, setTaskName] = useState("");
+
+    const [dueDate, setDueDate] = useState(new Date());
+    const [showPicker, setShowPicker] = useState(false);
+
+    const [selectedDate] = useState("2026-01-23");
+
+    const [tasks, setTasks] = useState<Task[]>([]);
+
     const [fontsLoaded] = useFonts({
         NotoSerif_400Regular,
         NotoSerif_600SemiBold,
-        NotoSerif_800ExtraBold,
         NotoSerif_700Bold,
+        NotoSerif_800ExtraBold,
     });
 
-    if (!fontsLoaded) {
-        return null;
-    }
+    useEffect(() => {
+        loadTasks();
+    }, [selectedDate]);
+
+    const loadTasks = async () => {
+        const data = await getTasksByDate(selectedDate);
+        setTasks(data);
+    };
+
+    const formatDateTime = (input: any) => {
+        const d = input?.toDate?.() ?? new Date(input);
+
+        if (isNaN(d.getTime())) return "Invalid";
+
+        const hours = String(d.getHours()).padStart(2, "0");
+        const minutes = String(d.getMinutes()).padStart(2, "0");
+
+        const day = String(d.getDate()).padStart(2, "0");
+        const month = String(d.getMonth() + 1).padStart(2, "0");
+
+        return `${hours}:${minutes} on ${day}/${month}`;
+    };
+
+    const visibleTasks = tasks.filter(t => !t.deleted);
+
+
+    const totalTasks = visibleTasks.length;
+    const completedTasks = visibleTasks.filter(t => t.completed).length;
+
+    const completionPercent =
+        totalTasks === 0 ? 0 : Math.round((completedTasks / totalTasks) * 100);
+
+    if (!fontsLoaded) return null;
 
     return (
         <ScreenWrapper>
-            <ScrollView
-                contentContainerStyle={{ paddingBottom: 200 }}
-                showsVerticalScrollIndicator={false}
-            >
+            <ScrollView contentContainerStyle={{ paddingBottom: 200 }}>
+
                 <View style={styles.page}>
-                    {/**addthe icon using image */}
+
+                    {/* HEADER */}
                     <View style={styles.points}>
                         <Text style={styles.numberPts}>1200</Text>
                         <Text style={styles.pts}>pts</Text>
                     </View>
+
                     <View style={styles.mainTitle}>
                         <Text style={styles.title}>The Hit List</Text>
-                        {/** will add foto serif italic */}
-                        <Text style={styles.titleDesc}>Curating today’s intellectual pursuits.</Text>
+                        <Text style={styles.titleDesc}>
+                            Curating today’s intellectual pursuits.
+                        </Text>
                     </View>
-                    <View style={styles.calender}>
-                        <View style={styles.calenderBox}>
-                            <View style={styles.calenderBox1}>
-                                <Text style={styles.dayTitle}>Mon</Text>
-                                <Text style={styles.day1}>12</Text>
-                            </View>
-                        </View>
-                        <View style={styles.calenderBox}>
-                            <View style={styles.calenderBox2}>
-                                <Text style={styles.dayTitle}>Tue</Text>
-                                <Text style={styles.day2}>13</Text>
-                            </View>
-                        </View>
-                        <View style={styles.calenderBox}>
-                            <View style={styles.calenderBox3}>
-                                <Text style={styles.dayTitleO}>Wed</Text>
-                                <Text style={styles.day3}>14</Text>
-                            </View>
-                        </View>
-                        <View style={styles.calenderBox}>
-                            <View style={styles.calenderBox4}>
-                                <Text style={styles.dayTitle}>Thu</Text>
-                                <Text style={styles.day4}>15</Text>
-                            </View>
-                        </View>
-                        <View style={styles.calenderBox}>
-                            <View style={styles.calenderBox5}>
-                                <Text style={styles.dayTitle}>Fri</Text>
-                                <Text style={styles.day5}>16</Text>
-                            </View>
-                        </View>
-                        <View style={styles.calenderBox}>
-                            <View style={styles.calenderBox6}>
-                                <Text style={styles.dayTitle}>Sat</Text>
-                                <Text style={styles.day6}>17</Text>
-                            </View>
-                        </View>
-                        <View style={styles.calenderBox}>
-                            <View style={styles.calenderBox7}>
-                                <Text style={styles.dayTitle}>Sun</Text>
-                                <Text style={styles.day7}>18</Text>
-                            </View>
-                        </View>
-                    </View>
+
+                    {/* CALENDAR */}
+                    <View style={styles.calender} />
+
+                    {/* TITLE */}
                     <View style={styles.title2}>
                         <Text style={styles.titleText1}>Priority Objectives</Text>
-                        <Text style={styles.titleText2}>3 remaining</Text>
+                        <Text style={styles.titleText2}>
+                            {visibleTasks.filter(t => !t.completed).length} remaining
+                        </Text>
                     </View>
 
+                    {/* TASK CARDS */}
                     <View style={styles.cardContainer}>
-                        <View style={styles.courseField}>
-                            <View style={styles.alignment}>
-                                <View style={styles.checkbox}></View>
-                                <View style={styles.texts}>
-                                    <Text style={styles.courseText}>CPRG 306 Mockup</Text>
-                                    <Text style={styles.courseTime}>09:00 AM - 11:30 AM</Text>
-                                </View>
-                            </View>
-                        </View>
 
-                        <View style={styles.courseField2}>
-                            <View style={styles.alignment2}>
-                                <View style={styles.text2}>
-                                    <Text style={styles.courseText2}>Add New</Text>
-                                </View>
-                            </View>
-                        </View>
+                        {visibleTasks
+                            .sort((a, b) => {
+                                if (a.completed === b.completed) return 0;
+                                return a.completed ? 1 : -1;
+                            })
+                            .map((task) => (
+                                <View key={task.id} style={styles.courseField3}>
+                                    <View style={styles.alignment3}>
 
-                        <View style={styles.courseField}>
-                            <View style={styles.alignment}>
-                                <View style={styles.checkbox}></View>
-                                <View style={styles.texts}>
-                                    <Text style={styles.courseText}>History of Rome</Text>
-                                    <Text style={styles.courseTime}>05:30 AM - 7:00 AM</Text>
-                                </View>
-                            </View>
-                        </View>
-                    </View>
+                                        {/* CHECKBOX */}
+                                        <Pressable
+                                            onPress={async () => {
+                                                await toggleTask(task.id!, task.completed);
+                                                loadTasks();
+                                            }}
+                                            style={[
+                                                styles.checkbox,
+                                                {
+                                                    width: 18,
+                                                    height: 18,
+                                                    borderRadius: 4,
+                                                    marginRight: 10,
+                                                    backgroundColor: task.completed ? "#C99F7A" : "transparent",
+                                                }
+                                            ]}
+                                        />
 
-                    <View style={styles.cardContainer}>
-                        <View style={styles.courseField3}>
-                            <View style={styles.alignment3}>
-                                <View style={styles.texts}>
-                                    <Text style={styles.courseText3}>Advanced Typography</Text>
-                                    <View style={styles.timeDate}>
-                                        {/** icons should be added */}
-                                        <Text style={styles.date}>Oct 15</Text>
-                                        <Text style={styles.time}> 10.00 AM</Text>
+                                        {/* TEXT */}
+                                        <View style={styles.texts}>
+
+                                            <Text
+                                                style={[
+                                                    styles.courseText3,
+                                                    task.completed && {
+                                                        textDecorationLine: "line-through",
+                                                        opacity: 0.6
+                                                    }
+                                                ]}
+                                            >
+                                                {task.title}
+                                            </Text>
+
+                                            <View style={styles.timeDate}>
+                                                <Text style={styles.date}>
+                                                    {formatDateTime(task.createdAt)}
+                                                </Text>
+
+                                                <Text style={styles.time}>
+                                                    {" - "}
+                                                    {formatDateTime(task.dueAt)}
+                                                </Text>
+                                            </View>
+
+                                        </View>
+
                                     </View>
                                 </View>
-                            </View>
-                        </View>
+                            ))
+                        }
 
-                        <View style={styles.courseField3}>
-                            <View style={styles.alignment3}>
-                                <View style={styles.texts}>
-                                    <Text style={styles.courseText3}>Group Sync : Project 404</Text>
-                                    <View style={styles.timeDate}>
-                                        {/** icons should be added */}
-                                        <Text style={styles.date}>Oct 16</Text>
-                                        <Text style={styles.time}> 2:30 PM</Text>
-                                    </View>
-                                </View>
-                            </View>
-                        </View>
-
-                        {/**add + for 2nd add new */}
-                        <View style={styles.courseField3}>
-                            <View style={styles.alignment3}>
-                                <View style={styles.text4}>
-                                    <Text style={styles.courseText4}>Add New</Text>
-                                </View>
-                            </View>
-                        </View>
                     </View>
 
+                    {/* ADD BUTTON */}
+                    <Pressable
+                        onPress={() => setModalVisible(true)}
+                        style={styles.text4}
+                    >
+                        <Text style={styles.courseText4}>+ Add New</Text>
+                    </Pressable>
+
+                    {/* PROGRESS */}
                     <View style={styles.progressField}>
                         <View style={styles.barTitle}>
                             <Text style={styles.termSurvival}>Term Survival</Text>
-                            <Text style={styles.completed}>75% COMPLETED</Text>
+                            <Text style={styles.completed}>
+                                {completionPercent}% COMPLETED
+                            </Text>
                         </View>
+
                         <View style={styles.progressBar}>
-                            <View style={styles.progressFill}></View>
+                            <View
+                                style={[
+                                    styles.progressFill,
+                                    { width: `${completionPercent}%` }
+                                ]}
+                            />
                         </View>
                     </View>
+
                 </View>
-            </ScrollView >
+            </ScrollView>
+
+            {/* MODAL */}
+            <Modal visible={modalVisible} animationType="slide" transparent>
+                <View style={{
+                    flex: 1,
+                    justifyContent: "center",
+                    backgroundColor: "#000000aa"
+                }}>
+                    <View style={{
+                        backgroundColor: "#fff",
+                        margin: 20,
+                        padding: 20,
+                        borderRadius: 20
+                    }}>
+
+                        <TextInput
+                            placeholder="Task Name"
+                            value={taskName}
+                            onChangeText={setTaskName}
+                            style={{
+                                marginBottom: 10,
+                                padding: 10,
+                                borderWidth: 1
+                            }}
+                        />
+
+                        <Pressable
+                            onPress={() => setShowPicker(true)}
+                            style={{
+                                padding: 10,
+                                borderWidth: 1,
+                                marginBottom: 10
+                            }}
+                        >
+                            <Text>
+                                Due: {dueDate.toLocaleString()}
+                            </Text>
+                        </Pressable>
+
+                        {showPicker && (
+                            <DateTimePicker
+                                value={dueDate}
+                                mode="datetime"
+                                display="default"
+                                onChange={(event, selectedDate) => {
+                                    setShowPicker(false);
+                                    if (selectedDate) setDueDate(selectedDate);
+                                }}
+                            />
+                        )}
+
+                        <Pressable
+                            onPress={async () => {
+                                await addTask({
+                                    title: taskName,
+                                    description: "",
+                                    completed: false,
+                                    selectedDate,
+                                    createdAt: Date.now(),
+                                    dueAt: dueDate.getTime(),
+                                } as any);
+
+                                setModalVisible(false);
+                                setTaskName("");
+                                setDueDate(new Date());
+
+                                loadTasks();
+                            }}
+                            style={{
+                                backgroundColor: "black",
+                                padding: 12,
+                                borderRadius: 10
+                            }}
+                        >
+                            <Text style={{ color: "white", textAlign: "center" }}>
+                                Create Task
+                            </Text>
+                        </Pressable>
+
+                    </View>
+                </View>
+            </Modal>
+
         </ScreenWrapper>
-    )
+    );
 }
 
 const styles = StyleSheet.create({
