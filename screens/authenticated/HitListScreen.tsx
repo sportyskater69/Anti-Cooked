@@ -7,6 +7,7 @@ import {
     useFonts
 } from '@expo-google-fonts/noto-serif';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import ScreenWrapper from "../../components/ScreenWrapper";
 // not sure how to implement inter at the same time as noto serif
 {/** add inter to a lot of field and import inter fontweights */ }
 
@@ -24,148 +25,150 @@ export default function LockInScreen() {
     }
 
     return (
-        <ScrollView
-            contentContainerStyle={{ paddingBottom: 200 }}
-            showsVerticalScrollIndicator={false}
-        >
-            <View style={styles.page}>
-                {/**addthe icon using image */}
-                <View style={styles.points}>
-                    <Text style={styles.numberPts}>1200</Text>
-                    <Text style={styles.pts}>pts</Text>
-                </View>
-                <View style={styles.mainTitle}>
-                    <Text style={styles.title}>The Hit List</Text>
-                    {/** will add foto serif italic */}
-                    <Text style={styles.titleDesc}>Curating today’s intellectual pursuits.</Text>
-                </View>
-                <View style={styles.calender}>
-                    <View style={styles.calenderBox}>
-                        <View style={styles.calenderBox1}>
-                            <Text style={styles.dayTitle}>Mon</Text>
-                            <Text style={styles.day1}>12</Text>
-                        </View>
+        <ScreenWrapper>
+            <ScrollView
+                contentContainerStyle={{ paddingBottom: 200 }}
+                showsVerticalScrollIndicator={false}
+            >
+                <View style={styles.page}>
+                    {/**addthe icon using image */}
+                    <View style={styles.points}>
+                        <Text style={styles.numberPts}>1200</Text>
+                        <Text style={styles.pts}>pts</Text>
                     </View>
-                    <View style={styles.calenderBox}>
-                        <View style={styles.calenderBox2}>
-                            <Text style={styles.dayTitle}>Tue</Text>
-                            <Text style={styles.day2}>13</Text>
-                        </View>
+                    <View style={styles.mainTitle}>
+                        <Text style={styles.title}>The Hit List</Text>
+                        {/** will add foto serif italic */}
+                        <Text style={styles.titleDesc}>Curating today’s intellectual pursuits.</Text>
                     </View>
-                    <View style={styles.calenderBox}>
-                        <View style={styles.calenderBox3}>
-                            <Text style={styles.dayTitleO}>Wed</Text>
-                            <Text style={styles.day3}>14</Text>
+                    <View style={styles.calender}>
+                        <View style={styles.calenderBox}>
+                            <View style={styles.calenderBox1}>
+                                <Text style={styles.dayTitle}>Mon</Text>
+                                <Text style={styles.day1}>12</Text>
+                            </View>
                         </View>
-                    </View>
-                    <View style={styles.calenderBox}>
-                        <View style={styles.calenderBox4}>
-                            <Text style={styles.dayTitle}>Thu</Text>
-                            <Text style={styles.day4}>15</Text>
+                        <View style={styles.calenderBox}>
+                            <View style={styles.calenderBox2}>
+                                <Text style={styles.dayTitle}>Tue</Text>
+                                <Text style={styles.day2}>13</Text>
+                            </View>
                         </View>
-                    </View>
-                    <View style={styles.calenderBox}>
-                        <View style={styles.calenderBox5}>
-                            <Text style={styles.dayTitle}>Fri</Text>
-                            <Text style={styles.day5}>16</Text>
+                        <View style={styles.calenderBox}>
+                            <View style={styles.calenderBox3}>
+                                <Text style={styles.dayTitleO}>Wed</Text>
+                                <Text style={styles.day3}>14</Text>
+                            </View>
                         </View>
-                    </View>
-                    <View style={styles.calenderBox}>
-                        <View style={styles.calenderBox6}>
-                            <Text style={styles.dayTitle}>Sat</Text>
-                            <Text style={styles.day6}>17</Text>
+                        <View style={styles.calenderBox}>
+                            <View style={styles.calenderBox4}>
+                                <Text style={styles.dayTitle}>Thu</Text>
+                                <Text style={styles.day4}>15</Text>
+                            </View>
                         </View>
-                    </View>
-                    <View style={styles.calenderBox}>
-                        <View style={styles.calenderBox7}>
-                            <Text style={styles.dayTitle}>Sun</Text>
-                            <Text style={styles.day7}>18</Text>
+                        <View style={styles.calenderBox}>
+                            <View style={styles.calenderBox5}>
+                                <Text style={styles.dayTitle}>Fri</Text>
+                                <Text style={styles.day5}>16</Text>
+                            </View>
                         </View>
-                    </View>
-                </View>
-                <View style={styles.title2}>
-                    <Text style={styles.titleText1}>Priority Objectives</Text>
-                    <Text style={styles.titleText2}>3 remaining</Text>
-                </View>
-
-                <View style={styles.cardContainer}>
-                    <View style={styles.courseField}>
-                        <View style={styles.alignment}>
-                            <View style={styles.checkbox}></View>
-                            <View style={styles.texts}>
-                                <Text style={styles.courseText}>CPRG 306 Mockup</Text>
-                                <Text style={styles.courseTime}>09:00 AM - 11:30 AM</Text>
+                        <View style={styles.calenderBox}>
+                            <View style={styles.calenderBox6}>
+                                <Text style={styles.dayTitle}>Sat</Text>
+                                <Text style={styles.day6}>17</Text>
+                            </View>
+                        </View>
+                        <View style={styles.calenderBox}>
+                            <View style={styles.calenderBox7}>
+                                <Text style={styles.dayTitle}>Sun</Text>
+                                <Text style={styles.day7}>18</Text>
                             </View>
                         </View>
                     </View>
-
-                    <View style={styles.courseField2}>
-                        <View style={styles.alignment2}>
-                            <View style={styles.text2}>
-                                <Text style={styles.courseText2}>Add New</Text>
-                            </View>
-                        </View>
+                    <View style={styles.title2}>
+                        <Text style={styles.titleText1}>Priority Objectives</Text>
+                        <Text style={styles.titleText2}>3 remaining</Text>
                     </View>
 
-                    <View style={styles.courseField}>
-                        <View style={styles.alignment}>
-                            <View style={styles.checkbox}></View>
-                            <View style={styles.texts}>
-                                <Text style={styles.courseText}>History of Rome</Text>
-                                <Text style={styles.courseTime}>05:30 AM - 7:00 AM</Text>
+                    <View style={styles.cardContainer}>
+                        <View style={styles.courseField}>
+                            <View style={styles.alignment}>
+                                <View style={styles.checkbox}></View>
+                                <View style={styles.texts}>
+                                    <Text style={styles.courseText}>CPRG 306 Mockup</Text>
+                                    <Text style={styles.courseTime}>09:00 AM - 11:30 AM</Text>
+                                </View>
                             </View>
                         </View>
-                    </View>
-                </View>
 
-                <View style={styles.cardContainer}>
-                    <View style={styles.courseField3}>
-                        <View style={styles.alignment3}>
-                            <View style={styles.texts}>
-                                <Text style={styles.courseText3}>Advanced Typography</Text>
-                                <View style={styles.timeDate}>
-                                    {/** icons should be added */}
-                                    <Text style={styles.date}>Oct 15</Text>
-                                    <Text style={styles.time}> 10.00 AM</Text>
+                        <View style={styles.courseField2}>
+                            <View style={styles.alignment2}>
+                                <View style={styles.text2}>
+                                    <Text style={styles.courseText2}>Add New</Text>
+                                </View>
+                            </View>
+                        </View>
+
+                        <View style={styles.courseField}>
+                            <View style={styles.alignment}>
+                                <View style={styles.checkbox}></View>
+                                <View style={styles.texts}>
+                                    <Text style={styles.courseText}>History of Rome</Text>
+                                    <Text style={styles.courseTime}>05:30 AM - 7:00 AM</Text>
                                 </View>
                             </View>
                         </View>
                     </View>
 
-                    <View style={styles.courseField3}>
-                        <View style={styles.alignment3}>
-                            <View style={styles.texts}>
-                                <Text style={styles.courseText3}>Group Sync : Project 404</Text>
-                                <View style={styles.timeDate}>
-                                    {/** icons should be added */}
-                                    <Text style={styles.date}>Oct 16</Text>
-                                    <Text style={styles.time}> 2:30 PM</Text>
+                    <View style={styles.cardContainer}>
+                        <View style={styles.courseField3}>
+                            <View style={styles.alignment3}>
+                                <View style={styles.texts}>
+                                    <Text style={styles.courseText3}>Advanced Typography</Text>
+                                    <View style={styles.timeDate}>
+                                        {/** icons should be added */}
+                                        <Text style={styles.date}>Oct 15</Text>
+                                        <Text style={styles.time}> 10.00 AM</Text>
+                                    </View>
+                                </View>
+                            </View>
+                        </View>
+
+                        <View style={styles.courseField3}>
+                            <View style={styles.alignment3}>
+                                <View style={styles.texts}>
+                                    <Text style={styles.courseText3}>Group Sync : Project 404</Text>
+                                    <View style={styles.timeDate}>
+                                        {/** icons should be added */}
+                                        <Text style={styles.date}>Oct 16</Text>
+                                        <Text style={styles.time}> 2:30 PM</Text>
+                                    </View>
+                                </View>
+                            </View>
+                        </View>
+
+                        {/**add + for 2nd add new */}
+                        <View style={styles.courseField3}>
+                            <View style={styles.alignment3}>
+                                <View style={styles.text4}>
+                                    <Text style={styles.courseText4}>Add New</Text>
                                 </View>
                             </View>
                         </View>
                     </View>
 
-                    {/**add + for 2nd add new */}
-                    <View style={styles.courseField3}>
-                        <View style={styles.alignment3}>
-                            <View style={styles.text4}>
-                                <Text style={styles.courseText4}>Add New</Text>
-                            </View>
+                    <View style={styles.progressField}>
+                        <View style={styles.barTitle}>
+                            <Text style={styles.termSurvival}>Term Survival</Text>
+                            <Text style={styles.completed}>75% COMPLETED</Text>
+                        </View>
+                        <View style={styles.progressBar}>
+                            <View style={styles.progressFill}></View>
                         </View>
                     </View>
                 </View>
-
-                <View style={styles.progressField}>
-                    <View style={styles.barTitle}>
-                        <Text style={styles.termSurvival}>Term Survival</Text>
-                        <Text style={styles.completed}>75% COMPLETED</Text>
-                    </View>
-                    <View style={styles.progressBar}>
-                        <View style={styles.progressFill}></View>
-                    </View>
-                </View>
-            </View>
-        </ScrollView >
+            </ScrollView >
+        </ScreenWrapper>
     )
 }
 
