@@ -7,7 +7,5 @@ export default function RootNavigator() {
 
     if (loading) return null;
 
-    // Temporarily bypass auth for UI testing
-    return <AppNavigator />;
-    // return firebaseUser ? <AppNavigator /> : <AuthNavigator />;
+    return firebaseUser ? <AppNavigator /> : <AuthNavigator />;
 }
