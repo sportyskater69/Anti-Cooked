@@ -296,7 +296,7 @@ export default function HitListScreen() {
                                 value={dueDate}
                                 mode="datetime"
                                 display="default"
-                                onChange={(event, selectedDate) => {
+                                onChange={(event: any, selectedDate: any) => {
                                     setShowPicker(false);
                                     if (selectedDate) setDueDate(selectedDate);
                                 }}

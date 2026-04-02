@@ -153,7 +153,7 @@ export default function LockInScreen() {
                 </View>
             </ScrollView>
         </ScreenWrapper>
->>>>>>> origin/main
+
     );
 }
 
