@@ -1,6 +1,10 @@
+import { useFormik } from "formik";
+import * as Yup from "yup";
+
 import { Inter_400Regular, Inter_600SemiBold } from '@expo-google-fonts/inter';
-import { NotoSerif_700Bold, useFonts } from '@expo-google-fonts/noto-serif';
+import { NotoSerif_700Bold } from '@expo-google-fonts/noto-serif';
 import { useNavigation } from '@react-navigation/native';
+import { useFonts } from 'expo-font';
 import { LinearGradient } from 'expo-linear-gradient';
 import React, { useEffect, useRef, useState } from 'react';
 import {
@@ -15,7 +19,24 @@ import {
   View,
 } from 'react-native';
 
-const InputField = ({ label, isPassword, ...props }: any) => {
+import { logIn } from "../../services/authService";
+import { ensureUserProfile } from "../../services/userService";
+
+// -------------------- VALIDATION --------------------
+
+const LoginSchema = Yup.object().shape({
+  email: Yup.string()
+    .email("Invalid email")
+    .required("Email is required"),
+
+  password: Yup.string()
+    .min(6, "Password must be at least 6 characters")
+    .required("Password is required"),
+});
+
+// -------------------- INPUT FIELD --------------------
+
+const InputField = ({ label, isPassword, error, ...props }: any) => {
   const [focused, setFocused] = useState(false);
   const [showPwd, setShowPwd] = useState(false);
   const borderAnim = useRef(new Animated.Value(0)).current;
@@ -32,6 +53,7 @@ const InputField = ({ label, isPassword, ...props }: any) => {
   return (
     <View style={styles.inputWrapper}>
       <Text style={styles.inputLabel}>{label}</Text>
+
       <View style={styles.inputContainer}>
         <TextInput
           style={styles.textInput}
@@ -41,27 +63,37 @@ const InputField = ({ label, isPassword, ...props }: any) => {
           placeholderTextColor="#f0bd8b80"
           {...props}
         />
+
         {isPassword && (
           <Pressable
             onPress={() => setShowPwd(!showPwd)}
             style={styles.toggleBtn}
             hitSlop={{ top: 15, bottom: 15, left: 15, right: 15 }}
           >
-            <Text style={styles.toggleText}>{showPwd ? 'HIDE' : 'SHOW'}</Text>
+            <Text style={styles.toggleText}>
+              {showPwd ? 'HIDE' : 'SHOW'}
+            </Text>
           </Pressable>
         )}
+
         <Animated.View
           style={[
             styles.bottomBorder,
-            {
-              opacity: borderAnim,
-            },
+            { opacity: borderAnim },
           ]}
         />
       </View>
+
+      {!!error && (
+        <Text style={{ color: "red", marginTop: 6, fontSize: 12 }}>
+          {error}
+        </Text>
+      )}
     </View>
   );
 };
+
+// -------------------- BUTTON --------------------
 
 const AnimatedGradientButton = ({ label, onPress }: any) => {
   const scaleAnim = useRef(new Animated.Value(1)).current;
@@ -105,12 +137,40 @@ const AnimatedGradientButton = ({ label, onPress }: any) => {
   );
 };
 
+// -------------------- SCREEN --------------------
+
 export default function LoginScreen() {
   const navigation = useNavigation();
+
   const [fontsLoaded] = useFonts({
     NotoSerif_700Bold,
     Inter_400Regular,
     Inter_600SemiBold,
+  });
+
+  const formik = useFormik({
+    initialValues: {
+      email: "",
+      password: "",
+    },
+    validationSchema: LoginSchema,
+
+    onSubmit: async (values, { setSubmitting }) => {
+      try {
+        const user = await logIn(values.email, values.password);
+
+        console.log("Auth success:", user.uid);
+
+        const profile = await ensureUserProfile(user);
+
+        console.log("Profile result:", profile);
+
+      } catch (error: any) {
+        console.log("FULL ERROR:", error);
+      } finally {
+        setSubmitting(false);
+      }
+    },
   });
 
   if (!fontsLoaded) {
@@ -128,30 +188,52 @@ export default function LoginScreen() {
       </View>
 
       <View style={styles.formArea}>
+
+        {/* EMAIL */}
         <InputField
           label="Email Address"
           placeholder="scholar@example.com"
           keyboardType="email-address"
           autoCapitalize="none"
+          value={formik.values.email}
+          onChangeText={formik.handleChange("email")}
+          onBlur={formik.handleBlur("email")}
+          error={formik.touched.email && formik.errors.email}
         />
-        <InputField label="Password" isPassword={true} />
+
+        {/* PASSWORD */}
+        <InputField
+          label="Password"
+          isPassword={true}
+          value={formik.values.password}
+          onChangeText={formik.handleChange("password")}
+          onBlur={formik.handleBlur("password")}
+          error={formik.touched.password && formik.errors.password}
+        />
 
         <View style={styles.actionsBox}>
-          <AnimatedGradientButton label="Sign In" onPress={() => { }} />
+
+          <AnimatedGradientButton
+            label={formik.isSubmitting ? "Signing In..." : "Sign In"}
+            onPress={formik.handleSubmit}
+          />
 
           <Pressable
             style={styles.secondaryLinkBox}
             onPress={() => navigation.navigate('Signup' as never)}
           >
             <Text style={styles.secondaryLink}>
-              Don't have an account? Sign Up
+              Don&apos;t have an account? Sign Up
             </Text>
           </Pressable>
+
         </View>
       </View>
     </KeyboardAvoidingView>
   );
 }
+
+// -------------------- STYLES (UNCHANGED) --------------------
 
 const styles = StyleSheet.create({
   container: {
