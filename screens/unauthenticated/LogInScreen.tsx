@@ -2,6 +2,8 @@ import { Inter_400Regular, Inter_600SemiBold } from '@expo-google-fonts/inter';
 import { NotoSerif_700Bold, useFonts } from '@expo-google-fonts/noto-serif';
 import { useNavigation } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { Formik } from 'formik';
+import { signInWithEmailAndPassword } from 'firebase/auth';
 import React, { useEffect, useRef, useState } from 'react';
 import {
   Animated,
@@ -13,9 +15,12 @@ import {
   Text,
   TextInput,
   View,
+  Alert,
 } from 'react-native';
 
-const InputField = ({ label, isPassword, ...props }: any) => {
+import { auth } from '../../config/firebaseConfig';
+
+const InputField = ({ label, isPassword, error, touched, ...props }: any) => {
   const [focused, setFocused] = useState(false);
   const [showPwd, setShowPwd] = useState(false);
   const borderAnim = useRef(new Animated.Value(0)).current;
@@ -55,18 +60,21 @@ const InputField = ({ label, isPassword, ...props }: any) => {
             styles.bottomBorder,
             {
               opacity: borderAnim,
+              backgroundColor: (touched && error) ? '#e57373' : '#ffcc7a'
             },
           ]}
         />
       </View>
+      {touched && error && <Text style={styles.errorText}>{error}</Text>}
     </View>
   );
 };
 
-const AnimatedGradientButton = ({ label, onPress }: any) => {
+const AnimatedGradientButton = ({ label, onPress, disabled }: any) => {
   const scaleAnim = useRef(new Animated.Value(1)).current;
 
   const handlePressIn = () => {
+    if (disabled) return;
     Animated.timing(scaleAnim, {
       toValue: 1.02,
       duration: 300,
@@ -76,6 +84,7 @@ const AnimatedGradientButton = ({ label, onPress }: any) => {
   };
 
   const handlePressOut = () => {
+    if (disabled) return;
     Animated.timing(scaleAnim, {
       toValue: 1,
       duration: 300,
@@ -88,8 +97,8 @@ const AnimatedGradientButton = ({ label, onPress }: any) => {
     <Pressable
       onPressIn={handlePressIn}
       onPressOut={handlePressOut}
-      onPress={onPress}
-      style={styles.buttonContainer}
+      onPress={!disabled ? onPress : undefined}
+      style={[styles.buttonContainer, disabled && { opacity: 0.7 }]}
     >
       <Animated.View style={{ transform: [{ scale: scaleAnim }] }}>
         <LinearGradient
@@ -127,28 +136,93 @@ export default function LoginScreen() {
         <Text style={styles.headline}>Anti{'\n'}Cooked</Text>
       </View>
 
-      <View style={styles.formArea}>
-        <InputField
-          label="Email Address"
-          placeholder="scholar@example.com"
-          keyboardType="email-address"
-          autoCapitalize="none"
-        />
-        <InputField label="Password" isPassword={true} />
+      <Formik
+        initialValues={{ email: '', password: '' }}
+        validate={values => {
+          const errors: any = {};
+          if (!values.email) {
+            errors.email = 'Required';
+          } else if (
+            !/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i.test(values.email)
+          ) {
+            errors.email = 'Invalid email address';
+          }
+          if (!values.password) {
+            errors.password = 'Required';
+          }
+          return errors;
+        }}
+        onSubmit={async (values, { setSubmitting }) => {
+          try {
+            await signInWithEmailAndPassword(auth, values.email, values.password);
+          } catch (error: any) {
+            let errorMessage = error.message;
+            if (
+              error.code === 'auth/user-not-found' ||
+              error.code === 'auth/wrong-password' ||
+              error.code === 'auth/invalid-credential'
+            ) {
+              errorMessage = 'Invalid email or password.';
+            } else if (error.code === 'auth/invalid-email') {
+              errorMessage = 'That email address is invalid!';
+            }
+            Alert.alert('Sign In Error', errorMessage);
+          } finally {
+            setSubmitting(false);
+          }
+        }}
+      >
+        {({
+          handleChange,
+          handleBlur,
+          handleSubmit,
+          values,
+          errors,
+          touched,
+          isSubmitting,
+        }) => (
+          <View style={styles.formArea}>
+            <InputField
+              label="Email Address"
+              placeholder="scholar@example.com"
+              keyboardType="email-address"
+              autoCapitalize="none"
+              onChangeText={handleChange('email')}
+              onBlur={handleBlur('email')}
+              value={values.email}
+              error={errors.email}
+              touched={touched.email}
+            />
+            <InputField
+              label="Password"
+              isPassword={true}
+              onChangeText={handleChange('password')}
+              onBlur={handleBlur('password')}
+              value={values.password}
+              error={errors.password}
+              touched={touched.password}
+            />
 
-        <View style={styles.actionsBox}>
-          <AnimatedGradientButton label="Sign In" onPress={() => { }} />
+            <View style={styles.actionsBox}>
+              <AnimatedGradientButton
+                label={isSubmitting ? 'Signing in...' : 'Sign In'}
+                onPress={handleSubmit}
+                disabled={isSubmitting}
+              />
 
-          <Pressable
-            style={styles.secondaryLinkBox}
-            onPress={() => navigation.navigate('Signup' as never)}
-          >
-            <Text style={styles.secondaryLink}>
-              Don't have an account? Sign Up
-            </Text>
-          </Pressable>
-        </View>
-      </View>
+              <Pressable
+                style={styles.secondaryLinkBox}
+                onPress={() => navigation.navigate('Signup' as never)}
+                disabled={isSubmitting}
+              >
+                <Text style={styles.secondaryLink}>
+                  Don't have an account? Sign Up
+                </Text>
+              </Pressable>
+            </View>
+          </View>
+        )}
+      </Formik>
     </KeyboardAvoidingView>
   );
 }
@@ -226,9 +300,15 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     height: 2,
-    backgroundColor: '#ffcc7a',
     borderBottomLeftRadius: 8,
     borderBottomRightRadius: 8,
+  },
+  errorText: {
+    fontFamily: 'Inter_400Regular',
+    color: '#e57373',
+    fontSize: 12,
+    marginTop: 6,
+    marginLeft: 4,
   },
   actionsBox: {
     marginTop: 16,

@@ -29,6 +29,7 @@ const ProfileEditorScreen = () => {
   });
 
   const [focusedField, setFocusedField] = useState<string | null>(null);
+  const [isEditing, setIsEditing] = useState(false);
 
   if (!fontsLoaded) {
     return null; // Or a loading spinner
@@ -42,13 +43,14 @@ const ProfileEditorScreen = () => {
         <TextInput
           style={[
             styles.textInput,
-            { borderBottomColor: isFocused ? '#c99f7a' : 'rgba(201, 159, 122, 0.3)' }
+            { borderBottomColor: isFocused ? '#c99f7a' : (isEditing ? 'rgba(201, 159, 122, 0.3)' : 'transparent') }
           ]}
           value={form[key]}
           onChangeText={(text) => setForm({ ...form, [key]: text })}
           onFocus={() => setFocusedField(key)}
           onBlur={() => setFocusedField(null)}
           selectionColor="#c99f7a"
+          editable={isEditing}
         />
       </View>
     );
@@ -75,9 +77,11 @@ const ProfileEditorScreen = () => {
                   transition={500}
                 />
               </LinearGradient>
-              <TouchableOpacity style={styles.editAvatarButton} activeOpacity={0.8}>
-                <FontAwesome5 name="pencil-alt" size={14} color="#18120f" />
-              </TouchableOpacity>
+              {isEditing && (
+                <TouchableOpacity style={styles.editAvatarButton} activeOpacity={0.8}>
+                  <FontAwesome5 name="pencil-alt" size={14} color="#18120f" />
+                </TouchableOpacity>
+              )}
             </View>
 
             <Text style={styles.userName}>Julian Thorne</Text>
@@ -92,11 +96,26 @@ const ProfileEditorScreen = () => {
             {renderInput('location', 'Location')}
           </View>
 
-          {/* Save Button */}
-          <TouchableOpacity style={styles.saveButton} activeOpacity={0.8}>
-            <Ionicons name="save" size={24} color="#533619" style={styles.saveIcon} />
-            <Text style={styles.saveButtonText}>Save Changes</Text>
-          </TouchableOpacity>
+          {/* Action Button */}
+          {isEditing ? (
+            <TouchableOpacity 
+              style={styles.saveButton} 
+              activeOpacity={0.8}
+              onPress={() => setIsEditing(false)}
+            >
+              <Ionicons name="save" size={24} color="#533619" style={styles.saveIcon} />
+              <Text style={styles.saveButtonText}>Save Changes</Text>
+            </TouchableOpacity>
+          ) : (
+            <TouchableOpacity 
+              style={styles.saveButton} 
+              activeOpacity={0.8}
+              onPress={() => setIsEditing(true)}
+            >
+              <FontAwesome5 name="user-edit" size={20} color="#533619" style={styles.saveIcon} />
+              <Text style={styles.saveButtonText}>Edit Profile</Text>
+            </TouchableOpacity>
+          )}
 
           {/* Log Out Button */}
           <TouchableOpacity
