@@ -1,11 +1,13 @@
 import { useNavigation } from "@react-navigation/native";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
-export default function NavBar() {
-    const navigation = useNavigation();
+type TabRoutes = "HomeScreen" | "HitList" | "LockIn" | "Profile";
 
-    const goTo = (screen: string) => {
-        navigation.navigate(screen as never);
+export default function NavBar() {
+    const navigation = useNavigation<any>();
+
+    const goTo = (screen: TabRoutes) => {
+        navigation.navigate(screen);
     };
 
     return (
@@ -28,7 +30,6 @@ export default function NavBar() {
         </View>
     );
 }
-
 const styles = StyleSheet.create({
     container: {
         position: "absolute",

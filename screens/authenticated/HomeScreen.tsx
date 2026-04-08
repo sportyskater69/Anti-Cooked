@@ -1,8 +1,8 @@
 import { Inter_300Light, Inter_400Regular, Inter_600SemiBold } from '@expo-google-fonts/inter';
 import { NotoSerif_400Regular, NotoSerif_700Bold, useFonts } from '@expo-google-fonts/noto-serif';
 import { MaterialIcons } from '@expo/vector-icons';
-import { useFocusEffect } from '@react-navigation/native';
-import React, { useCallback, useRef } from 'react';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   Animated,
   Easing,
@@ -13,9 +13,14 @@ import {
   Text,
   View
 } from 'react-native';
-
-
+import AnimatedCard from "../../components/AnimatedCard";
+import QuoteCard from '../../components/QuoteCard';
+import { auth } from '../../config/firebaseConfig';
+import { getTasksByDate } from '../../services/taskService';
+import { getUserProfile } from '../../services/userService';
 import { useDateStore } from "../../store/dateStore";
+import { useTimerStore } from "../../store/timerStore";
+import { formatDate, formatTimeHM, formatTimeLeft } from "../../utils/formatters";
 
 const COLORS = {
   mocha: '#2C2521',
@@ -23,45 +28,17 @@ const COLORS = {
   caramel: '#C99F7A',
 };
 
+type TabRoutes = "HomeScreen" | "HitList" | "LockIn" | "Profile";
+
+
 
 // --- Custom Animated Card Wrapper ---
-const AnimatedCard = ({ children, style, ...props }: any) => {
-  const scaleAnim = useRef(new Animated.Value(1)).current;
 
-  const handlePressIn = () => {
-    Animated.timing(scaleAnim, {
-      toValue: 0.98,
-      duration: 300,
-      easing: Easing.bezier(0.4, 0, 0.2, 1),
-      useNativeDriver: true,
-    }).start();
-  };
-
-  const handlePressOut = () => {
-    Animated.timing(scaleAnim, {
-      toValue: 1,
-      duration: 300,
-      easing: Easing.bezier(0.4, 0, 0.2, 1),
-      useNativeDriver: true,
-    }).start();
-  };
-
-  return (
-    <Pressable
-      onPressIn={handlePressIn}
-      onPressOut={handlePressOut}
-      {...props}
-      style={[{ width: '100%' }]}
-    >
-      <Animated.View style={[style, { transform: [{ scale: scaleAnim }] }]}>
-        {children}
-      </Animated.View>
-    </Pressable>
-  );
-};
 
 export default function HomeScreen() {
-
+  const navigation = useNavigation<any>();
+  const [fullName, setFullName] = useState('');
+  const [tasks, setTasks] = useState<any[]>([]);
   const selectedDate = useDateStore((state) => state.selectedDate);
   const setSelectedDate = useDateStore((state) => state.setSelectedDate);
   const [fontsLoaded] = useFonts({
@@ -71,13 +48,49 @@ export default function HomeScreen() {
     Inter_600SemiBold,
     Inter_300Light,
   });
+  const secondsLeft = useTimerStore((s) => s.secondsLeft);
 
+  useEffect(() => {
+    const loadUser = async () => {
+      try {
+        const user = auth.currentUser;
+        if (!user) return;
+
+        const profile = await getUserProfile(user.uid);
+        setFullName(profile?.fullName || user.displayName || 'User');
+      } catch (error) {
+        console.error("Failed to load user:", error);
+      }
+    };
+
+    loadUser();
+  }, []);
+
+
+  useFocusEffect(
+    useCallback(() => {
+      const loadTasks = async () => {
+        try {
+          const data = await getTasksByDate(selectedDate);
+          setTasks(data);
+        } catch (error) {
+          console.error("Failed to load tasks:", error);
+        }
+      };
+
+      loadTasks();
+    }, [selectedDate])
+  );
+
+
+  const visibleTasks = tasks
+    .filter(t => !t.deleted)
+    .sort((a, b) => (a.completed === b.completed ? 0 : a.completed ? 1 : -1));
   const tileAnims = useRef(Array.from({ length: 6 }).map(() => new Animated.Value(0))).current;
 
   useFocusEffect(
     useCallback(() => {
       tileAnims.forEach((anim) => anim.setValue(0));
-
       Animated.stagger(
         100,
         tileAnims.map((anim) =>
@@ -95,9 +108,11 @@ export default function HomeScreen() {
   if (!fontsLoaded) return <View style={{ flex: 1, backgroundColor: COLORS.mocha }} />;
 
   // Format Current Date
-  const today = new Date();
-  const dateOptions: Intl.DateTimeFormatOptions = { month: 'long', day: 'numeric' };
-  const formattedDate = today.toLocaleDateString('en-US', dateOptions).toUpperCase();
+  const formattedDate = formatDate(Date.now()).toUpperCase();
+
+  const goTo = (screen: TabRoutes) => {
+    navigation.navigate(screen);
+  };
 
   const getTileStyle = (index: number) => ({
     opacity: tileAnims[index],
@@ -111,6 +126,33 @@ export default function HomeScreen() {
     ],
   });
 
+  const incompleteTasks = tasks
+    .filter(t => !t.completed && !t.deleted)
+    .sort((a, b) => {
+      const aTime = a.createdAt?.seconds ?? a.createdAt;
+      const bTime = b.createdAt?.seconds ?? b.createdAt;
+      return bTime - aTime; // newest first
+    });
+
+  const focusTasks = incompleteTasks.slice(0, 3);
+
+  // progress
+  const totalTasks = tasks.filter(t => !t.deleted).length;
+  const completedTasks = tasks.filter(t => t.completed && !t.deleted).length;
+
+  const progressPercent =
+    totalTasks === 0 ? 0 : Math.round((completedTasks / totalTasks) * 100);
+
+  const quotes = [
+    "Discipline is choosing what you want most over what you want now.",
+    "Small steps every day lead to big results.",
+    "Focus is the new productivity.",
+    "You don’t need motivation, you need structure.",
+    "Consistency beats intensity.",
+  ];
+
+  const randomQuote = quotes[Math.floor(Math.random() * quotes.length)];
+
   return (
     <ScrollView
       style={styles.root}
@@ -122,7 +164,7 @@ export default function HomeScreen() {
         <View style={styles.headerTitles}>
           <Text style={styles.headerHeadline}>Home</Text>
           <Text style={styles.headerSubtitle}>
-            Welcome back to your sanctuary, John
+            Welcome back to your sanctuary, {fullName}
           </Text>
         </View>
         <View style={styles.avatarContainer}>
@@ -138,82 +180,93 @@ export default function HomeScreen() {
       {/* Grid Layout Starts */}
       <View style={styles.gridContainer}>
         {/* Widget 1: Deep Focus (col-span-2) */}
-        <Animated.View style={getTileStyle(0)}>
-          <AnimatedCard style={styles.deepFocusCard}>
-            <View style={styles.deepFocusTopRow}>
-              <View>
-                <Text style={styles.deepFocusLabel}>CURRENT FOCUS</Text>
-                <Text style={styles.deepFocusTitle}>Morning Deep Focus</Text>
-              </View>
-              <View style={styles.deepFocusIconBadge}>
-                <MaterialIcons name="timer" size={24} color={COLORS.oatMilk} />
-              </View>
-            </View>
+        <Pressable onPress={() => goTo("LockIn")}>
+          <Animated.View style={[getTileStyle(0), { marginBottom: 50 }]}>
 
-            <View style={styles.deepFocusTaskList}>
-              <View style={styles.taskItem}>
-                <View style={styles.taskDot} />
-                <Text style={styles.taskText}>Review CPRG 306 Project scope</Text>
+            <AnimatedCard style={styles.deepFocusCard}>
+              <View style={styles.deepFocusTopRow}>
+                <View>
+                  <Text style={styles.deepFocusLabel}>CURRENT FOCUS</Text>
+                  <Text style={styles.deepFocusTitle}>Morning Deep Focus</Text>
+                </View>
+                <View style={styles.deepFocusIconBadge}>
+                  <MaterialIcons name="timer" size={24} color={COLORS.oatMilk} />
+                </View>
               </View>
-              <View style={styles.taskItem}>
-                <View style={styles.taskDot} />
-                <Text style={styles.taskText}>Annotate &quot;The Bermuda Narrative&quot;</Text>
-              </View>
-            </View>
 
-            <View style={styles.progressSection}>
-              <View style={styles.progressBarTrack}>
-                <View style={[styles.progressBarFill, { width: '65%' }]} />
-              </View>
-              <View style={styles.progressLabels}>
-                <Text style={styles.progressLabelText}>65% COMPLETE</Text>
-                <Text style={styles.progressLabelText}>45M LEFT</Text>
-              </View>
-            </View>
-          </AnimatedCard>
-        </Animated.View>
+              <View style={styles.deepFocusTaskList}>
+                {focusTasks.map((task) => (
+                  <View key={task.id} style={styles.taskItem}>
+                    <View style={styles.taskDot} />
+                    <Text style={styles.taskText}>
+                      {task.title}
+                    </Text>
+                  </View>
+                ))}
 
+                {focusTasks.length === 0 && (
+                  <Text style={styles.taskText}>No tasks yet</Text>
+                )}
+              </View>
+
+              <View style={styles.progressSection}>
+                <View style={styles.progressBarTrack}>
+                  <View style={[styles.progressBarFill, { width: `${progressPercent}%` }]} />
+                </View>
+                <View style={styles.progressLabels}>
+                  <Text style={styles.progressLabelText}>
+                    {progressPercent}% COMPLETE
+                  </Text>
+                  <Text style={styles.progressLabelText}>
+                    {formatTimeLeft(secondsLeft)}
+                  </Text>
+                </View>
+              </View>
+            </AnimatedCard>
+
+          </Animated.View>
+        </Pressable>
         {/* Widget 2: Upcoming Classes (col-span-2) */}
-        <Animated.View style={getTileStyle(1)}>
-          <AnimatedCard style={styles.upcomingClassesCard}>
-            <View style={styles.upcomingIconContainer}>
-              <MaterialIcons name="school" size={24} color={COLORS.caramel} />
-            </View>
-            <View style={styles.upcomingContent}>
-              <Text style={styles.upcomingLabel}>NEXT SESSION</Text>
-              <Text style={styles.upcomingTitle}>History: Late Modernism</Text>
-              <Text style={styles.upcomingSubtitle}>14:00 • Hall B</Text>
-            </View>
-            <MaterialIcons
-              name="chevron-right"
-              size={24}
-              color={`${COLORS.oatMilk}33`} // ~20% opacity
-            />
-          </AnimatedCard>
-        </Animated.View>
+
 
         {/* 2-Column Split for Priority vs (Streak + Date) */}
         <View style={styles.splitRow}>
           {/* Widget 3: Priority Objectives (col-span-1) */}
           <View style={styles.halfColumn}>
-            <Animated.View style={[getTileStyle(2), { flex: 1 }]}>
-              <AnimatedCard style={styles.priorityCard}>
-                <View>
-                  <MaterialIcons name="bookmark" size={24} color={COLORS.mocha} style={{ marginBottom: 12 }} />
-                  <Text style={styles.priorityTitle}>Priority Objectives</Text>
-                </View>
-                <View style={styles.priorityList}>
-                  <View style={styles.priorityItem}>
-                    <Text style={styles.priorityItemText}>MOCKUP</Text>
-                    <Text style={styles.priorityItemTime}>10:30</Text>
+            <Pressable onPress={() => goTo("HitList")}>
+              <Animated.View style={[getTileStyle(2), { flex: 1 }]}>
+                <AnimatedCard style={styles.priorityCard}>
+                  <View>
+                    <MaterialIcons name="bookmark" size={24} color={COLORS.mocha} style={{ marginBottom: 12 }} />
+                    <Text style={styles.priorityTitle}>Priority Objectives</Text>
                   </View>
-                  <View style={[styles.priorityItem, { marginBottom: 0 }]}>
-                    <Text style={styles.priorityItemText}>THEORY</Text>
-                    <Text style={styles.priorityItemTime}>13:45</Text>
+                  <View style={styles.priorityList}>
+                    <View style={styles.priorityList}>
+                      {visibleTasks.slice(0, 2).map((task, index) => {
+                        const time = formatTimeHM(task.dueAt);
+
+                        return (
+                          <View
+                            key={task.id}
+                            style={[
+                              styles.priorityItem,
+                              index === 1 && { marginBottom: 0 }
+                            ]}
+                          >
+                            <Text style={styles.priorityItemText}>
+                              {task.title.toUpperCase()}
+                            </Text>
+                            <Text style={styles.priorityItemTime}>
+                              {time}
+                            </Text>
+                          </View>
+                        );
+                      })}
+                    </View>
                   </View>
-                </View>
-              </AnimatedCard>
-            </Animated.View>
+                </AnimatedCard>
+              </Animated.View>
+            </Pressable>
           </View>
 
           {/* Right Column (col-span-1 for Widget 4 and 5) */}
@@ -221,7 +274,7 @@ export default function HomeScreen() {
             {/* Widget 4: Day Streak */}
             <Animated.View style={[getTileStyle(3), { flex: 1 }]}>
               <AnimatedCard style={styles.streakCard}>
-                <Text style={styles.streakNumber}>12</Text>
+                <Text style={styles.streakNumber}>0</Text>
                 <Text style={styles.streakLabel}>DAY STREAK</Text>
                 <MaterialIcons
                   name="local-fire-department"
@@ -246,34 +299,7 @@ export default function HomeScreen() {
             </Animated.View>
           </View>
         </View>
-
-        {/* Widget 6: Quick Access (col-span-2) */}
-        <Animated.View style={getTileStyle(5)}>
-          <AnimatedCard style={styles.quickAccessCard}>
-            <View style={styles.quickAccessTopRow}>
-              <Text style={styles.quickAccessTitle}>Quick Access</Text>
-              <MaterialIcons name="edit" size={20} color={COLORS.caramel} />
-            </View>
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={styles.quickAccessChips}
-            >
-              {['Seminar Notes', 'Research PDF', 'Reflections'].map((chip, index) => (
-                <Pressable
-                  key={index}
-                  style={({ pressed }) => [
-                    styles.chip,
-                    { opacity: pressed ? 0.85 : 1 }
-                  ]}
-                >
-                  <Text style={styles.chipText}>{chip.toUpperCase()}</Text>
-                </Pressable>
-              ))}
-            </ScrollView>
-          </AnimatedCard>
-        </Animated.View>
-
+        <QuoteCard quote={randomQuote} />
       </View>
     </ScrollView>
   );

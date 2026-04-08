@@ -1,11 +1,269 @@
-import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { Inter_400Regular, Inter_600SemiBold } from '@expo-google-fonts/inter';
+import { NotoSerif_700Bold, useFonts } from '@expo-google-fonts/noto-serif';
+import { useNavigation } from '@react-navigation/native';
+import { LinearGradient } from 'expo-linear-gradient';
+import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
+import { Formik } from 'formik';
+import React, { useEffect, useRef, useState } from 'react';
+import {
+  Alert,
+  Animated,
+  Easing,
+  KeyboardAvoidingView,
+  Platform,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+} from 'react-native';
+import { createUserProfile } from '../../services/userService';
+
+import { auth } from '../../config/firebaseConfig';
+
+const formatDate = (date: Date) => {
+  const day = date.getDate().toString().padStart(2, "0");
+  const month = (date.getMonth() + 1).toString().padStart(2, "0");
+  const year = date.getFullYear();
+
+  return `${day}/${month}/${year}`;
+};
+
+const InputField = ({ label, isPassword, error, touched, ...props }: any) => {
+  const [focused, setFocused] = useState(false);
+  const [showPwd, setShowPwd] = useState(false);
+  const borderAnim = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    Animated.timing(borderAnim, {
+      toValue: focused ? 1 : 0,
+      duration: 300,
+      easing: Easing.bezier(0.4, 0, 0.2, 1),
+      useNativeDriver: false,
+    }).start();
+  }, [focused, borderAnim]);
+
+  return (
+    <View style={styles.inputWrapper}>
+      <Text style={styles.inputLabel}>{label}</Text>
+      <View style={styles.inputContainer}>
+        <TextInput
+          style={styles.textInput}
+          onFocus={() => setFocused(true)}
+          onBlur={() => setFocused(false)}
+          secureTextEntry={isPassword && !showPwd}
+          placeholderTextColor="#f0bd8b80"
+          {...props}
+        />
+        {isPassword && (
+          <Pressable
+            onPress={() => setShowPwd(!showPwd)}
+            style={styles.toggleBtn}
+            hitSlop={{ top: 15, bottom: 15, left: 15, right: 15 }}
+          >
+            <Text style={styles.toggleText}>{showPwd ? 'HIDE' : 'SHOW'}</Text>
+          </Pressable>
+        )}
+        <Animated.View
+          style={[
+            styles.bottomBorder,
+            {
+              opacity: borderAnim,
+              backgroundColor: (touched && error) ? '#e57373' : '#ffcc7a'
+            },
+          ]}
+        />
+      </View>
+      {touched && error && <Text style={styles.errorText}>{error}</Text>}
+    </View>
+  );
+};
+
+const AnimatedGradientButton = ({ label, onPress, disabled }: any) => {
+  const scaleAnim = useRef(new Animated.Value(1)).current;
+
+  const handlePressIn = () => {
+    if (disabled) return;
+    Animated.timing(scaleAnim, {
+      toValue: 1.02,
+      duration: 300,
+      easing: Easing.bezier(0.4, 0, 0.2, 1),
+      useNativeDriver: true,
+    }).start();
+  };
+
+  const handlePressOut = () => {
+    if (disabled) return;
+    Animated.timing(scaleAnim, {
+      toValue: 1,
+      duration: 300,
+      easing: Easing.bezier(0.4, 0, 0.2, 1),
+      useNativeDriver: true,
+    }).start();
+  };
+
+  return (
+    <Pressable
+      onPressIn={handlePressIn}
+      onPressOut={handlePressOut}
+      onPress={!disabled ? onPress : undefined}
+      style={[styles.buttonContainer, disabled && { opacity: 0.7 }]}
+    >
+      <Animated.View style={{ transform: [{ scale: scaleAnim }] }}>
+        <LinearGradient
+          colors={['#ffcc7a', '#e2b05e']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.gradientButton}
+        >
+          <Text style={styles.buttonText}>{label}</Text>
+        </LinearGradient>
+      </Animated.View>
+    </Pressable>
+  );
+};
 
 export default function SignUpScreen() {
+  const navigation = useNavigation();
+  const [fontsLoaded] = useFonts({
+    NotoSerif_700Bold,
+    Inter_400Regular,
+    Inter_600SemiBold,
+  });
+
+  if (!fontsLoaded) {
+    return <View style={styles.container} />;
+  }
+
   return (
-    <View style={styles.container}>
-      <Text style={styles.text}>Sign Up Screen coming soon...</Text>
-    </View>
+    <KeyboardAvoidingView
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      style={styles.container}
+    >
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={styles.headerArea}>
+          <Text style={styles.subhead}>JOIN THE CLUB</Text>
+          <Text style={styles.headline}>Get{'\n'}Started</Text>
+        </View>
+
+        <Formik
+          initialValues={{ fullName: '', email: '', password: '' }}
+          validate={values => {
+            const errors: any = {};
+            if (!values.fullName) {
+              errors.fullName = 'Required';
+            }
+            if (!values.email) {
+              errors.email = 'Required';
+            } else if (
+              !/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i.test(values.email)
+            ) {
+              errors.email = 'Invalid email address';
+            }
+            if (!values.password) {
+              errors.password = 'Required';
+            } else if (values.password.length < 6) {
+              errors.password = 'Password must be at least 6 characters';
+            }
+            return errors;
+          }}
+          onSubmit={async (values, { setSubmitting }) => {
+            try {
+              const userCredential = await createUserWithEmailAndPassword(
+                auth,
+                values.email,
+                values.password
+              );
+              // Update user profile with Full Name
+              if (userCredential.user) {
+                // Save to Firebase Auth
+                await updateProfile(userCredential.user, {
+                  displayName: values.fullName,
+                });
+                await createUserProfile(userCredential.user, values.fullName);
+              }
+            } catch (error: any) {
+              let errorMessage = error.message;
+              if (error.code === 'auth/email-already-in-use') {
+                errorMessage = 'That email address is already in use!';
+              } else if (error.code === 'auth/invalid-email') {
+                errorMessage = 'That email address is invalid!';
+              } else if (error.code === 'auth/weak-password') {
+                errorMessage = 'That password is too weak.';
+              }
+              Alert.alert('Sign Up Error', errorMessage);
+            } finally {
+              setSubmitting(false);
+            }
+          }}
+        >
+          {({
+            handleChange,
+            handleBlur,
+            handleSubmit,
+            values,
+            errors,
+            touched,
+            isSubmitting,
+          }) => (
+            <View style={styles.formArea}>
+              <InputField
+                label="Full Name"
+                placeholder="John Doe"
+                autoCapitalize="words"
+                onChangeText={handleChange('fullName')}
+                onBlur={handleBlur('fullName')}
+                value={values.fullName}
+                error={errors.fullName}
+                touched={touched.fullName}
+              />
+              <InputField
+                label="Email Address"
+                placeholder="scholar@example.com"
+                keyboardType="email-address"
+                autoCapitalize="none"
+                onChangeText={handleChange('email')}
+                onBlur={handleBlur('email')}
+                value={values.email}
+                error={errors.email}
+                touched={touched.email}
+              />
+              <InputField
+                label="Password"
+                isPassword={true}
+                onChangeText={handleChange('password')}
+                onBlur={handleBlur('password')}
+                value={values.password}
+                error={errors.password}
+                touched={touched.password}
+              />
+
+              <View style={styles.actionsBox}>
+                <AnimatedGradientButton
+                  label={isSubmitting ? 'Creating account...' : 'Sign Up'}
+                  onPress={handleSubmit}
+                  disabled={isSubmitting}
+                />
+
+                <Pressable
+                  style={styles.secondaryLinkBox}
+                  onPress={() => navigation.navigate('Signin' as never)}
+                  disabled={isSubmitting}
+                >
+                  <Text style={styles.secondaryLink}>
+                    Already have an account? Sign In
+                  </Text>
+                </Pressable>
+              </View>
+            </View>
+          )}
+        </Formik>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
 
@@ -13,11 +271,117 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#1f1007',
-    alignItems: 'center',
-    justifyContent: 'center',
   },
-  text: {
+  scrollContent: {
+    paddingTop: 100,
+    paddingBottom: 64,
+  },
+  headerArea: {
+    paddingLeft: 24,
+    marginBottom: 48,
+  },
+  subhead: {
+    fontFamily: 'Inter_600SemiBold',
+    fontSize: 14,
+    color: '#f0bd8b',
+    textTransform: 'uppercase',
+    letterSpacing: 2,
+    marginBottom: 16,
+  },
+  headline: {
+    fontFamily: 'NotoSerif_700Bold',
+    fontSize: 56,
+    letterSpacing: -1.12,
     color: '#fcdccd',
+    lineHeight: 64,
+  },
+  formArea: {
+    marginLeft: 48,
+    marginRight: 32,
+  },
+  inputWrapper: {
+    marginBottom: 24,
+  },
+  inputLabel: {
     fontFamily: 'Inter_400Regular',
+    color: '#f0bd8b',
+    fontSize: 14,
+    marginBottom: 8,
+  },
+  inputContainer: {
+    backgroundColor: '#443026',
+    borderRadius: 8,
+    height: 64,
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    shadowColor: '#190b04',
+    shadowOpacity: 0.4,
+    shadowRadius: 48,
+    shadowOffset: { width: 0, height: 16 },
+    elevation: 10,
+  },
+  textInput: {
+    flex: 1,
+    fontFamily: 'Inter_400Regular',
+    fontSize: 16,
+    color: '#fcdccd',
+    height: '100%',
+  },
+  toggleBtn: {
+    paddingLeft: 12,
+  },
+  toggleText: {
+    fontFamily: 'Inter_600SemiBold',
+    fontSize: 12,
+    color: '#f0bd8b',
+    letterSpacing: 1,
+  },
+  bottomBorder: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: 2,
+    borderBottomLeftRadius: 8,
+    borderBottomRightRadius: 8,
+  },
+  errorText: {
+    fontFamily: 'Inter_400Regular',
+    color: '#e57373',
+    fontSize: 12,
+    marginTop: 6,
+    marginLeft: 4,
+  },
+  actionsBox: {
+    marginTop: 24,
+  },
+  buttonContainer: {
+    shadowColor: '#190b04',
+    shadowOpacity: 0.4,
+    shadowRadius: 48,
+    shadowOffset: { width: 0, height: 16 },
+    elevation: 8,
+  },
+  gradientButton: {
+    height: 64,
+    borderRadius: 48,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  buttonText: {
+    fontFamily: 'Inter_600SemiBold',
+    fontSize: 18,
+    color: '#432c00',
+    letterSpacing: 0.5,
+  },
+  secondaryLinkBox: {
+    marginTop: 32,
+    alignItems: 'center',
+  },
+  secondaryLink: {
+    fontFamily: 'Inter_400Regular',
+    fontSize: 14,
+    color: '#f0bd8b',
   },
 });
