@@ -15,6 +15,8 @@ export const createUserProfile = async (user: User, fullName?: string) => {
             location: "",
             createdAt: Date.now(),
             lastUpdated: Date.now(),
+            streak: 0,
+            lastActiveDate: "",
         };
 
         await setDoc(doc(db, "users", user.uid), profile);

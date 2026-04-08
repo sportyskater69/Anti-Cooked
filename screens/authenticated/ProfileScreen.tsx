@@ -204,10 +204,6 @@ const ProfileEditorScreen = () => {
 };
 
 const styles = StyleSheet.create({
-    safeArea: {
-        flex: 1,
-        backgroundColor: '#18120f',
-    },
     scrollContent: {
         flexGrow: 1,
         alignItems: 'center',

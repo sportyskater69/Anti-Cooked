@@ -6,4 +6,6 @@ export type UserProfile = {
     location?: string;
     createdAt: number;
     lastUpdated?: number;
+    streak: number
+    lastActiveDate: string // 
 }

@@ -1,5 +1,6 @@
+import { MaterialIcons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, View } from "react-native";
 
 type TabRoutes = "HomeScreen" | "HitList" | "LockIn" | "Profile";
 
@@ -13,19 +14,19 @@ export default function NavBar() {
     return (
         <View style={styles.container}>
             <Pressable onPress={() => goTo("HomeScreen")} style={styles.item}>
-                <Text style={styles.text}>Home</Text>
+                <MaterialIcons name="home" size={26} color="#f0bd8b" />
             </Pressable>
 
             <Pressable onPress={() => goTo("HitList")} style={styles.item}>
-                <Text style={styles.text}>Hit List</Text>
+                <MaterialIcons name="track-changes" size={26} color="#f0bd8b" />
             </Pressable>
 
             <Pressable onPress={() => goTo("LockIn")} style={styles.item}>
-                <Text style={styles.text}>Lock In</Text>
+                <MaterialIcons name="lock" size={26} color="#f0bd8b" />
             </Pressable>
 
             <Pressable onPress={() => goTo("Profile")} style={styles.item}>
-                <Text style={styles.text}>Profile</Text>
+                <MaterialIcons name="person" size={26} color="#f0bd8b" />
             </Pressable>
         </View>
     );
@@ -52,10 +53,5 @@ const styles = StyleSheet.create({
     },
     item: {
         paddingHorizontal: 10,
-    },
-    text: {
-        color: "#f0bd8b",
-        fontSize: 14,
-        fontWeight: "600",
     },
 });

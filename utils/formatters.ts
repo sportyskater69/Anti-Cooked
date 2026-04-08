@@ -21,8 +21,10 @@ export const formatTimeHM = (dateInput: any) => {
 };
 
 export const formatTimeLeft = (seconds: number = 0) => {
-    const min = Math.floor(seconds / 60);
-    const sec = seconds % 60;
+    if (!Number.isFinite(seconds)) return "00:00";
 
-    return `${min}M ${sec.toString().padStart(2, "0")}S LEFT`;
+    const m = Math.floor(seconds / 60);
+    const s = seconds % 60;
+
+    return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
 };

@@ -16,11 +16,15 @@ import {
 import AnimatedCard from "../../components/AnimatedCard";
 import QuoteCard from '../../components/QuoteCard';
 import { auth } from '../../config/firebaseConfig';
+import { useRandomQuote } from "../../hooks/useRandomQuotes";
+import { updateStreak } from "../../services/streakService";
 import { getTasksByDate } from '../../services/taskService';
 import { getUserProfile } from '../../services/userService';
 import { useDateStore } from "../../store/dateStore";
 import { useTimerStore } from "../../store/timerStore";
 import { formatDate, formatTimeHM, formatTimeLeft } from "../../utils/formatters";
+import { getCompletionPercent } from "../../utils/progressUtil";
+import { getIncompleteTasks, getVisibleTasks, sortByCreatedAt } from "../../utils/taskUtils";
 
 const COLORS = {
   mocha: '#2C2521',
@@ -30,16 +34,13 @@ const COLORS = {
 
 type TabRoutes = "HomeScreen" | "HitList" | "LockIn" | "Profile";
 
-
-
-// --- Custom Animated Card Wrapper ---
-
-
 export default function HomeScreen() {
+  const [streak, setStreak] = useState(0);
   const navigation = useNavigation<any>();
   const [fullName, setFullName] = useState('');
   const [tasks, setTasks] = useState<any[]>([]);
   const selectedDate = useDateStore((state) => state.selectedDate);
+
   const setSelectedDate = useDateStore((state) => state.setSelectedDate);
   const [fontsLoaded] = useFonts({
     NotoSerif_700Bold,
@@ -66,6 +67,19 @@ export default function HomeScreen() {
     loadUser();
   }, []);
 
+  useFocusEffect(
+    useCallback(() => {
+      const loadStreak = async () => {
+        const newStreak = await updateStreak();
+        if (newStreak !== undefined) {
+          setStreak(newStreak);
+        }
+      };
+
+      loadStreak();
+    }, [])
+  );
+
 
   useFocusEffect(
     useCallback(() => {
@@ -82,10 +96,16 @@ export default function HomeScreen() {
     }, [selectedDate])
   );
 
+  const quotes = [
+    "Discipline is choosing what you want most over what you want now.",
+    "Small steps every day lead to big results.",
+    "Focus is the new productivity.",
+    "You don’t need motivation, you need structure.",
+    "Consistency beats intensity.",
+  ];
 
-  const visibleTasks = tasks
-    .filter(t => !t.deleted)
-    .sort((a, b) => (a.completed === b.completed ? 0 : a.completed ? 1 : -1));
+  const randomQuote = useRandomQuote(quotes);
+
   const tileAnims = useRef(Array.from({ length: 6 }).map(() => new Animated.Value(0))).current;
 
   useFocusEffect(
@@ -126,32 +146,12 @@ export default function HomeScreen() {
     ],
   });
 
-  const incompleteTasks = tasks
-    .filter(t => !t.completed && !t.deleted)
-    .sort((a, b) => {
-      const aTime = a.createdAt?.seconds ?? a.createdAt;
-      const bTime = b.createdAt?.seconds ?? b.createdAt;
-      return bTime - aTime; // newest first
-    });
-
-  const focusTasks = incompleteTasks.slice(0, 3);
-
   // progress
-  const totalTasks = tasks.filter(t => !t.deleted).length;
-  const completedTasks = tasks.filter(t => t.completed && !t.deleted).length;
-
-  const progressPercent =
-    totalTasks === 0 ? 0 : Math.round((completedTasks / totalTasks) * 100);
-
-  const quotes = [
-    "Discipline is choosing what you want most over what you want now.",
-    "Small steps every day lead to big results.",
-    "Focus is the new productivity.",
-    "You don’t need motivation, you need structure.",
-    "Consistency beats intensity.",
-  ];
-
-  const randomQuote = quotes[Math.floor(Math.random() * quotes.length)];
+  const visibleTasks = getVisibleTasks(tasks);
+  const progressPercent = getCompletionPercent(visibleTasks);
+  const focusTasks = sortByCreatedAt(
+    getIncompleteTasks(visibleTasks)
+  ).slice(0, 3);
 
   return (
     <ScrollView
@@ -205,7 +205,7 @@ export default function HomeScreen() {
                 ))}
 
                 {focusTasks.length === 0 && (
-                  <Text style={styles.taskText}>No tasks yet</Text>
+                  <Text style={styles.taskText}>🎯 No active tasks — time to add one</Text>
                 )}
               </View>
 
@@ -242,26 +242,36 @@ export default function HomeScreen() {
                   </View>
                   <View style={styles.priorityList}>
                     <View style={styles.priorityList}>
-                      {visibleTasks.slice(0, 2).map((task, index) => {
-                        const time = formatTimeHM(task.dueAt);
+                      {sortByCreatedAt(
+                        getIncompleteTasks(visibleTasks)
+                      ).slice(0, 2).length > 0 ? (
+                        sortByCreatedAt(
+                          getIncompleteTasks(visibleTasks)
+                        ).slice(0, 2).map((task, index) => {
+                          const time = formatTimeHM(task.dueAt);
 
-                        return (
-                          <View
-                            key={task.id}
-                            style={[
-                              styles.priorityItem,
-                              index === 1 && { marginBottom: 0 }
-                            ]}
-                          >
-                            <Text style={styles.priorityItemText}>
-                              {task.title.toUpperCase()}
-                            </Text>
-                            <Text style={styles.priorityItemTime}>
-                              {time}
-                            </Text>
-                          </View>
-                        );
-                      })}
+                          return (
+                            <View
+                              key={task.id}
+                              style={[
+                                styles.priorityItem,
+                                index === 1 && { marginBottom: 0 }
+                              ]}
+                            >
+                              <Text style={styles.priorityItemText}>
+                                {task.title.toUpperCase()}
+                              </Text>
+                              <Text style={styles.priorityItemTime}>
+                                {time}
+                              </Text>
+                            </View>
+                          );
+                        })
+                      ) : (
+                        <Text style={styles.taskText}>
+                          🎯 No active tasks — time to add one
+                        </Text>
+                      )}
                     </View>
                   </View>
                 </AnimatedCard>
@@ -274,7 +284,7 @@ export default function HomeScreen() {
             {/* Widget 4: Day Streak */}
             <Animated.View style={[getTileStyle(3), { flex: 1 }]}>
               <AnimatedCard style={styles.streakCard}>
-                <Text style={styles.streakNumber}>0</Text>
+                <Text style={styles.streakNumber}>{streak}</Text>
                 <Text style={styles.streakLabel}>DAY STREAK</Text>
                 <MaterialIcons
                   name="local-fire-department"
@@ -456,46 +466,6 @@ const styles = StyleSheet.create({
     letterSpacing: 1.5,
   },
 
-  /* Widget 2: Upcoming Classes */
-  upcomingClassesCard: {
-    backgroundColor: COLORS.mocha,
-    borderRadius: 24,
-    padding: 20,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 16,
-    borderWidth: 1,
-    borderColor: `${COLORS.oatMilk}1A`, // 10% ghost border
-    width: '100%',
-  },
-  upcomingIconContainer: {
-    backgroundColor: `${COLORS.caramel}1A`, // 10% opacity
-    padding: 12,
-    borderRadius: 24, // roughly pill/circle
-  },
-  upcomingContent: {
-    flex: 1,
-  },
-  upcomingLabel: {
-    fontFamily: 'Inter_600SemiBold',
-    fontSize: 9,
-    color: COLORS.caramel,
-    textTransform: 'uppercase',
-    letterSpacing: 1.5,
-    marginBottom: 4,
-  },
-  upcomingTitle: {
-    fontFamily: 'NotoSerif_700Bold',
-    fontSize: 15,
-    color: COLORS.oatMilk,
-    marginBottom: 2,
-  },
-  upcomingSubtitle: {
-    fontFamily: 'Inter_400Regular',
-    fontSize: 12,
-    color: `${COLORS.oatMilk}66`, // 40% opacity
-  },
-
   /* Widget 3: Priority Objectives */
   priorityCard: {
     backgroundColor: COLORS.caramel,
@@ -589,41 +559,5 @@ const styles = StyleSheet.create({
     fontFamily: 'NotoSerif_700Bold',
     fontSize: 18,
     color: COLORS.oatMilk,
-  },
-
-  /* Widget 6: Quick Access */
-  quickAccessCard: {
-    backgroundColor: COLORS.oatMilk,
-    borderRadius: 24,
-    padding: 20,
-    width: '100%',
-  },
-  quickAccessTopRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  quickAccessTitle: {
-    fontFamily: 'NotoSerif_700Bold',
-    fontSize: 16,
-    fontStyle: 'italic',
-    color: COLORS.mocha,
-  },
-  quickAccessChips: {
-    gap: 8,
-    flexDirection: 'row',
-  },
-  chip: {
-    backgroundColor: `${COLORS.mocha}0D`, // 5% opacity
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-  },
-  chipText: {
-    fontFamily: 'Inter_600SemiBold',
-    fontSize: 10,
-    color: `${COLORS.mocha}99`, // 60% opacity
-    textTransform: 'uppercase',
   },
 });

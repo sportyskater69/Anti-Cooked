@@ -7,7 +7,7 @@ import {
     useFonts
 } from "@expo-google-fonts/noto-serif";
 import DateTimePicker from "@react-native-community/datetimepicker";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import {
     Modal,
     Pressable,
@@ -20,11 +20,35 @@ import {
 import AnimatedCard from "../../components/AnimatedCard";
 import CalendarDay from "../../components/CalendarDay";
 import ScreenWrapper from "../../components/ScreenWrapper";
-import { addTask, getTasksByDate, toggleTask } from "../../services/taskService";
-import { formatTimeHM } from "../../utils/formatters";
-
+import { useTasksByDate } from "../../hooks/useTaskByDate";
+import { addTask, toggleTask } from "../../services/taskService";
 import { useDateStore } from "../../store/dateStore";
-import { Task } from "../../types/Task";
+import { formatTimeHM } from "../../utils/formatters";
+import { getCompletionPercent } from "../../utils/progressUtil";
+import {
+    getVisibleTasks,
+    sortByCompletion
+} from "../../utils/taskUtils";
+
+const generateMonthDays = (baseDate: Date) => {
+    const start = new Date();
+    start.setHours(0, 0, 0, 0);
+
+    const end = new Date(baseDate);
+    end.setMonth(end.getMonth() + 1);
+
+    const days: Date[] = [];
+    const current = new Date(start);
+
+    while (current <= end) {
+        days.push(new Date(current));
+        current.setDate(current.getDate() + 1);
+    }
+
+    return days;
+};
+
+
 
 export default function HitListScreen() {
 
@@ -38,30 +62,11 @@ export default function HitListScreen() {
     const selectedDate = useDateStore((state) => state.selectedDate);
     const setSelectedDate = useDateStore((state) => state.setSelectedDate);
 
-    const generateMonthDays = (baseDate: Date) => {
-        const start = new Date(); // ✅ TODAY instead of month start
-        start.setHours(0, 0, 0, 0);
-
-        const end = new Date(baseDate);
-        end.setMonth(end.getMonth() + 1);
-
-        const days: Date[] = [];
-
-        const current = new Date(start);
-
-        while (current <= end) {
-            days.push(new Date(current));
-            current.setDate(current.getDate() + 1);
-        }
-
-        return days;
-    };
-
 
     const [calendarBase] = useState(new Date());
     const calendarDays = generateMonthDays(calendarBase);
 
-    const [tasks, setTasks] = useState<Task[]>([]);
+    const { tasks, setTasks, reload: loadTasks } = useTasksByDate(selectedDate);
 
     const [fontsLoaded] = useFonts({
         NotoSerif_400Regular,
@@ -69,29 +74,27 @@ export default function HitListScreen() {
         NotoSerif_700Bold,
         NotoSerif_800ExtraBold,
     });
-
-    useEffect(() => {
-        loadTasks();
-    }, [selectedDate]);
-
-    const loadTasks = async () => {
-        const data = await getTasksByDate(selectedDate);
-        setTasks(data);
-    };
-
-
-
-
-    const visibleTasks = tasks.filter(t => !t.deleted);
-
-
-    const totalTasks = visibleTasks.length;
-    const completedTasks = visibleTasks.filter(t => t.completed).length;
-
-    const completionPercent =
-        totalTasks === 0 ? 0 : Math.round((completedTasks / totalTasks) * 100);
-
+    const visibleTasks = getVisibleTasks(tasks);
+    const completionPercent = getCompletionPercent(visibleTasks);
     if (!fontsLoaded) return null;
+
+    const createTask = async () => {
+        if (!taskName.trim()) return;
+
+        await addTask({
+            title: taskName,
+            description: "",
+            completed: false,
+            selectedDate,
+            createdAt: Date.now(),
+            dueAt: dueDate.getTime(),
+        } as any);
+
+        setModalVisible(false);
+        setTaskName("");
+        setDueDate(new Date());
+        loadTasks();
+    };
 
     return (
         <ScreenWrapper>
@@ -140,64 +143,59 @@ export default function HitListScreen() {
                     {/* TASK CARDS */}
                     <View style={styles.cardContainer}>
 
-                        {visibleTasks
-                            .sort((a, b) => {
-                                if (a.completed === b.completed) return 0;
-                                return a.completed ? 1 : -1;
-                            })
-                            .map((task) => (
-                                <AnimatedCard key={task.id} style={styles.courseField3}>
-                                    <View style={styles.alignment3}>
+                        {sortByCompletion(visibleTasks).map((task) => (
+                            <AnimatedCard key={task.id} style={styles.courseField3}>
+                                <View style={styles.alignment3}>
 
-                                        {/* CHECKBOX */}
-                                        <Pressable
-                                            onPress={async () => {
-                                                await toggleTask(task.id!, task.completed);
-                                                loadTasks();
-                                            }}
+                                    {/* CHECKBOX */}
+                                    <Pressable
+                                        onPress={async () => {
+                                            await toggleTask(task.id!, task.completed);
+                                            loadTasks();
+                                        }}
+                                        style={[
+                                            styles.checkbox,
+                                            {
+                                                width: 30,
+                                                height: 30,
+                                                borderRadius: 6,
+                                                marginRight: 10,
+                                                backgroundColor: task.completed ? "#C99F7A" : "transparent",
+                                            }
+                                        ]}
+                                    />
+
+                                    {/* TEXT */}
+                                    <View style={styles.texts}>
+
+                                        <Text
                                             style={[
-                                                styles.checkbox,
-                                                {
-                                                    width: 30,
-                                                    height: 30,
-                                                    borderRadius: 6,
-                                                    marginRight: 10,
-                                                    backgroundColor: task.completed ? "#C99F7A" : "transparent",
+                                                styles.courseText3,
+                                                task.completed && {
+                                                    textDecorationLine: "line-through",
+                                                    opacity: 0.6
                                                 }
                                             ]}
-                                        />
+                                        >
+                                            {task.title}
+                                        </Text>
 
-                                        {/* TEXT */}
-                                        <View style={styles.texts}>
-
-                                            <Text
-                                                style={[
-                                                    styles.courseText3,
-                                                    task.completed && {
-                                                        textDecorationLine: "line-through",
-                                                        opacity: 0.6
-                                                    }
-                                                ]}
-                                            >
-                                                {task.title}
+                                        <View style={styles.timeDate}>
+                                            <Text style={styles.date}>
+                                                {formatTimeHM(task.createdAt)}
                                             </Text>
 
-                                            <View style={styles.timeDate}>
-                                                <Text style={styles.date}>
-                                                    {formatTimeHM(task.createdAt)}
-                                                </Text>
-
-                                                <Text style={styles.time}>
-                                                    {" - "}
-                                                    {formatTimeHM(task.dueAt)}
-                                                </Text>
-                                            </View>
-
+                                            <Text style={styles.time}>
+                                                {" - "}
+                                                {formatTimeHM(task.dueAt)}
+                                            </Text>
                                         </View>
 
                                     </View>
-                                </AnimatedCard>
-                            ))
+
+                                </View>
+                            </AnimatedCard>
+                        ))
                         }
 
                     </View>
@@ -283,22 +281,7 @@ export default function HitListScreen() {
                         )}
 
                         <Pressable
-                            onPress={async () => {
-                                await addTask({
-                                    title: taskName,
-                                    description: "",
-                                    completed: false,
-                                    selectedDate,
-                                    createdAt: Date.now(),
-                                    dueAt: dueDate.getTime(),
-                                } as any);
-
-                                setModalVisible(false);
-                                setTaskName("");
-                                setDueDate(new Date());
-
-                                loadTasks();
-                            }}
+                            onPress={createTask}
                             style={{
                                 backgroundColor: "black",
                                 padding: 12,
@@ -345,35 +328,11 @@ const styles = StyleSheet.create({
         marginLeft: 30,
     },
 
-    points: {
-        flexDirection: 'row',
-        justifyContent: 'flex-end',
-        marginTop: 50,
-        paddingRight: 20,
-    },
-
-    numberPts: {
-        color: '#FFFFFF',
-        fontWeight: 'bold',
-        fontSize: 14,
-    },
-
-    pts: {
-        color: '#A19A96',
-        fontSize: 8,
-        marginTop: 7,
-    },
-
     calender: {
         marginTop: 15,
         flexDirection: "row",
         backgroundColor: "#4C3E36",
         paddingVertical: 10,
-    },
-
-    calenderBox: {
-        marginRight: 16.5,
-        marginLeft: 5,
     },
 
     title2: {
@@ -399,19 +358,6 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
 
-    courseField: {
-        width: '87%',
-        height: 125,
-        backgroundColor: '#EAE0D5',
-        borderRadius: 50,
-    },
-
-    alignment: {
-        flexDirection: 'row',
-        marginLeft: 30,
-        marginTop: 45,
-    },
-
     checkbox: {
         borderWidth: 2,
         borderColor: "#9A6F4B",
@@ -421,40 +367,6 @@ const styles = StyleSheet.create({
 
     texts: {
         marginLeft: 20
-    },
-
-    courseText: {
-        fontFamily: 'NotoSerif_700Bold',
-        fontSize: 20,
-    },
-
-    courseTime: {
-        fontSize: 14,
-        color: '#C99F7A',
-        fontWeight: 'bold',
-    },
-
-    courseField2: {
-        width: '87%',
-        height: 125,
-        backgroundColor: '#EAE0D5',
-        borderRadius: 50,
-    },
-
-    alignment2: {
-        flexDirection: 'row',
-        marginLeft: 30,
-        marginTop: 45,
-    },
-
-
-    text2: {
-        marginLeft: 80
-    },
-
-    courseText2: {
-        fontFamily: 'NotoSerif_700Bold',
-        fontSize: 30,
     },
 
     timeDate: {
@@ -486,23 +398,9 @@ const styles = StyleSheet.create({
         height: "100%",
     },
 
-    text3: {
-        marginLeft: 80,
-    },
-
     courseText3: {
         fontFamily: 'NotoSerif_700Bold',
         fontSize: 16,
-    },
-
-    courseText4: {
-        marginTop: 8,
-        fontFamily: 'NotoSerif_700Bold',
-        fontSize: 24,
-    },
-
-    text4: {
-        marginLeft: 70,
     },
 
     progressField: {

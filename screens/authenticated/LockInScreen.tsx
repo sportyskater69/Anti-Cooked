@@ -1,7 +1,4 @@
 import "@expo-google-fonts/inter";
-import ScreenWrapper from "../../components/ScreenWrapper";
-import TimelineItem from "../../components/TimelineItem";
-
 import {
     NotoSerif_400Regular,
     NotoSerif_600SemiBold,
@@ -9,21 +6,28 @@ import {
     NotoSerif_800ExtraBold,
     useFonts
 } from "@expo-google-fonts/noto-serif";
-
-import { useFocusEffect, useRoute } from "@react-navigation/native";
+import { MaterialIcons } from "@expo/vector-icons";
+import { useFocusEffect } from "@react-navigation/native";
 import React, { useCallback, useEffect, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
-import { getTasksByDate, toggleTask } from "../../services/taskService";
-import { useTimerStore } from "../../store/timerStore";
-import { Task } from "../../types/Task";
-
+import AnimatedCard from "../../components/AnimatedCard";
+import ScreenWrapper from "../../components/ScreenWrapper";
+import TimelineItem from "../../components/TimelineItem";
+import { useCountdownTimer } from "../../hooks/useCountdownTimer";
+import { useRandomQuote } from "../../hooks/useRandomQuotes";
+import { useTasksByDate } from "../../hooks/useTaskByDate";
+import { toggleTask } from "../../services/taskService";
 import { useDateStore } from "../../store/dateStore";
+import { useTimerStore } from "../../store/timerStore";
+import { COLORS } from "../../theme/colors";
+import { formatTimeLeft } from "../../utils/formatters";
+import {
+    getIncompleteTasks,
+    sortByCompletion,
+    sortByCreatedAt
+} from "../../utils/taskUtils";
 
-const COLORS = {
-    mocha: '#2C2521',
-    oatMilk: '#EAE0D5',
-    caramel: '#C99F7A',
-};
+
 
 export default function LockInScreen() {
 
@@ -37,7 +41,7 @@ export default function LockInScreen() {
         "Do it even when you don’t feel like it.",
     ];
 
-    const randomQuote = quotes[Math.floor(Math.random() * quotes.length)];
+    const randomQuote = useRandomQuote(quotes);
 
     const [fontsLoaded] = useFonts({
         NotoSerif_400Regular,
@@ -55,25 +59,21 @@ export default function LockInScreen() {
 
     const [showModal, setShowModal] = useState(false);
 
-    const route = useRoute<any>();
-
     const selectedDate = useDateStore((state) => state.selectedDate);
     const setSelectedDate = useDateStore((state) => state.setSelectedDate);
 
+    const { tasks, setTasks, reload: load } = useTasksByDate(selectedDate);
 
-    const [tasks, setTasks] = useState<Task[]>([]);
+    const currentTask = sortByCreatedAt(
+        getIncompleteTasks(tasks)
+    )[0];
 
-    const load = useCallback(async () => {
-        const data = await getTasksByDate(selectedDate);
-        setTasks(data);
-    }, [selectedDate]);
 
     useFocusEffect(
         useCallback(() => {
             load();
         }, [load])
     );
-
     useFocusEffect(
         React.useCallback(() => {
             return () => {
@@ -82,70 +82,22 @@ export default function LockInScreen() {
         }, [])
     );
 
-    useEffect(() => {
-        if (!running) return;
-
-        const interval = setInterval(() => {
-            setSecondsLeft(secondsLeft - 1);
-        }, 1000);
-
-        return () => clearInterval(interval);
-    }, [running, secondsLeft]);
-
-    useEffect(() => {
-        if (!running) return;
-
-        if (secondsLeft <= 0) {
-            setSecondsLeft(0);
+    useCountdownTimer(
+        running,
+        secondsLeft,
+        setSecondsLeft,
+        () => {
             setRunning(false);
             setShowModal(true);
-            return;
         }
-
-        const interval = setInterval(() => {
-            setSecondsLeft(secondsLeft - 1);
-        }, 1000);
-
-        return () => clearInterval(interval);
-    }, [running, secondsLeft]);
-
-    const formatTime = (sec: number) => {
-        if (!Number.isFinite(sec)) return "00:00";
-
-        const m = Math.floor(sec / 60);
-        const s = sec % 60;
-
-        return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
-    };
-
-
-    const sortedTasks = [...tasks].sort((a, b) => {
-        const aCompleted = a.completed ? 1 : 0;
-        const bCompleted = b.completed ? 1 : 0;
-
-        // Completed first
-        if (aCompleted !== bCompleted) return bCompleted - aCompleted;
-
-        // Then sort by createdAt
-        const aTime = (a.createdAt as any)?.seconds ?? a.createdAt;
-        const bTime = (b.createdAt as any)?.seconds ?? b.createdAt;
-
-        return aTime - bTime;
-    });
+    );
 
     const checkOffNextTask = async () => {
-        // find oldest incomplete task
-        const incompleteTasks = tasks
-            .filter(t => !t.completed)
-            .sort((a, b) => {
-                const aTime = (a.createdAt as any)?.seconds ?? a.createdAt;
-                const bTime = (b.createdAt as any)?.seconds ?? b.createdAt;
-                return aTime - bTime;
-            });
+        const nextTask = sortByCreatedAt(
+            getIncompleteTasks(tasks)
+        )[0];
 
-        if (incompleteTasks.length === 0) return;
-
-        const nextTask = incompleteTasks[0];
+        if (!nextTask) return;
 
         await toggleTask(nextTask.id, nextTask.completed);
         load();
@@ -167,11 +119,15 @@ export default function LockInScreen() {
 
                     <Text style={styles.text}>Lock - in Mode</Text>
 
-                    <View style={styles.box}>
+                    <AnimatedCard style={styles.box}>
                         <Text style={styles.deepwork}>DEEP WORK SESSION</Text>
-                        <Text style={styles.essay}>Philosophy Essay</Text>
+                        <Text style={styles.essay}>
+                            {currentTask
+                                ? currentTask.title
+                                : "No active task — add one to begin"}
+                        </Text>
                         <Text style={styles.min}>
-                            {formatTime(secondsLeft)}
+                            {formatTimeLeft(secondsLeft)}
                         </Text>
 
                         <View style={styles.nextup}>
@@ -179,13 +135,18 @@ export default function LockInScreen() {
                                 Next up: {mode === "work" ? "5 min break" : "25 min session"}
                             </Text>
                         </View>
-                    </View>
+                    </AnimatedCard>
 
                     <View style={styles.buttonRow}>
                         <Pressable
                             style={styles.commenceFocus}
                             onPress={() => setRunning(true)}
                         >
+                            <MaterialIcons
+                                name="local-fire-department"
+                                size={20}
+                                color={COLORS.primary}
+                            />
                             <Text style={styles.commenceFocusText}>Commence Focus</Text>
                         </Pressable>
 
@@ -202,6 +163,12 @@ export default function LockInScreen() {
                                 }
                             }}
                         >
+                            <MaterialIcons
+                                name="schedule"
+                                size={20}
+                                color={COLORS.primary}
+                                style={{ marginRight: 8 }}
+                            />
                             <Text style={styles.resetSessionText}>Reset Session</Text>
                         </Pressable>
                     </View>
@@ -216,11 +183,11 @@ export default function LockInScreen() {
                             contentContainerStyle={{ paddingBottom: 40 }}
                             showsVerticalScrollIndicator={false}
                         >
-                            {sortedTasks.map((item, index) => (
+                            {sortByCompletion(tasks).map((item, index) => (
                                 <TimelineItem
                                     key={item.id}
                                     task={item}
-                                    isLast={index === sortedTasks.length - 1}
+                                    isLast={index === sortByCompletion(tasks).length - 1}
                                     onPress={async () => {
                                         await toggleTask(item.id, item.completed);
                                         load();
@@ -349,7 +316,7 @@ export default function LockInScreen() {
 
 const styles = StyleSheet.create({
     quoteCard: {
-        backgroundColor: COLORS.oatMilk,
+        backgroundColor: COLORS.card.background,
         borderRadius: 28,
         paddingVertical: 18,
         paddingHorizontal: 20,
@@ -363,7 +330,7 @@ const styles = StyleSheet.create({
         fontFamily: "NotoSerif_400Regular",
         fontSize: 14,
         fontStyle: "italic",
-        color: COLORS.mocha,
+        color: COLORS.accent,
         textAlign: "center",
         lineHeight: 20,
     },
@@ -437,8 +404,8 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
 
-    page2: {
-        flex: 2,
+    commenceFocusText: {
+        fontWeight: 'bold',
     },
 
     deepwork: {
@@ -478,40 +445,41 @@ const styles = StyleSheet.create({
     },
 
     // > logo must be added
+
     commenceFocus: {
         width: '39%',
         height: 46,
         backgroundColor: '#C99F7A',
         marginTop: 25,
         borderRadius: 30,
-        marginRight: 10,
-    },
 
-    commenceFocusText: {
-        marginTop: 13,
-        marginLeft: 25,
-        fontWeight: 'bold',
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "center",
     },
 
     // 'reset' logo should be added
     resetSession: {
-        width: '39%',
+        width: "39%",
         height: 46,
-        backgroundColor: '#C99F7A',
+        backgroundColor: "#C99F7A",
         marginTop: 25,
         borderRadius: 30,
-    },
 
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "center",
+    },
     resetSessionText: {
-        marginTop: 13,
-        marginLeft: 38,
-        fontWeight: 'bold',
+        fontWeight: "bold",
     },
-
     buttonRow: {
-        flexDirection: 'row',
+        flexDirection: "row",
+        justifyContent: "center",
+        gap: 12,
+        width: "100%",
+        marginTop: 20,
     },
-
     page: {
         flexGrow: 1,
         backgroundColor: 'rgb(67, 53, 46)',
@@ -551,99 +519,10 @@ const styles = StyleSheet.create({
         marginLeft: 35,
     },
 
-    progressRow: {
-    },
-
-    leftSide: {
-        width: '20%',
-        height: 20,
-        backgroundColor: '#EBBE97',
-        borderWidth: 1,
-        borderColor: "white",
-
-    },
-
-    circle: {
-
-    },
-
-    line: {
-
-    },
-
-    rightSide: {
-        marginTop: 40,
-        marginLeft: 65,
-    },
-
-    title2: {
-        color: '#D3C4B8',
-        fontSize: 18,
-        fontWeight: 'bold',
-    },
-
-    title3: {
-        color: '#EDE0D9',
-        fontSize: 18,
-        fontWeight: 'bold',
-    },
-
-    desc: {
-        color: '#D3C4B8',
-        fontSize: 14,
-    },
-
     date: {
         marginTop: 10,
         color: '#685E57',
         fontSize: 12,
         letterSpacing: 1.2,
     },
-
-    date2: {
-        color: '#9A7C64',
-        letterSpacing: 1.2,
-    },
-
-    reward: {
-        flexDirection: 'row',
-        width: '97%',
-        height: 54,
-        borderRadius: 100,
-        backgroundColor: '#302924',
-    },
-
-    point: {
-        marginRight: 9,
-        fontSize: 19,
-        marginTop: 15,
-        color: '#EDE0D9',
-        fontWeight: 'bold',
-    },
-
-    pts: {
-        marginTop: 21,
-        color: '#5F5751',
-        letterSpacing: 1.2,
-        fontSize: 12,
-        fontWeight: 'bold',
-    },
-
-    totalPoints: {
-        marginLeft: 30,
-        flexDirection: 'row',
-    },
-
-    // Should add an reward icon next to '450'
-    rewardText: {
-        marginBottom: 10,
-        marginLeft: 14,
-        fontFamily: 'NotoSerif_700Bold',
-        color: '#FFFFFF',
-        fontSize: 24,
-    },
-
-    rewardField: {
-        marginTop: 120,
-    }
 });
