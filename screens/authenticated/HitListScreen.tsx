@@ -23,6 +23,7 @@ import ScreenWrapper from "../../components/ScreenWrapper";
 import { useTasksByDate } from "../../hooks/useTaskByDate";
 import { addTask, toggleTask } from "../../services/taskService";
 import { useDateStore } from "../../store/dateStore";
+import { COLORS } from "../../theme/colors";
 import { formatTimeHM } from "../../utils/formatters";
 import { getCompletionPercent } from "../../utils/progressUtil";
 import {
@@ -160,7 +161,7 @@ export default function HitListScreen() {
                                                 height: 30,
                                                 borderRadius: 6,
                                                 marginRight: 10,
-                                                backgroundColor: task.completed ? "#C99F7A" : "transparent",
+                                                backgroundColor: task.completed ? COLORS.card.border : "transparent",
                                             }
                                         ]}
                                     />
@@ -306,7 +307,7 @@ const styles = StyleSheet.create({
     calendarDayToday: {
         backgroundColor: "#3A2F2A",
         borderWidth: 1,
-        borderColor: "#C99F7A",
+        borderColor: COLORS.card.border,
     },
     page: {
         backgroundColor: '#43352E',
@@ -319,7 +320,7 @@ const styles = StyleSheet.create({
         fontFamily: 'NotoSerif_700Bold',
         fontSize: 32,
         marginLeft: 30,
-        color: '#FFFFFF'
+        color: COLORS.text.light
     },
 
     titleDesc: {
@@ -341,13 +342,13 @@ const styles = StyleSheet.create({
     },
 
     titleText1: {
-        color: '#C99F7A',
+        color: COLORS.card.border,
         fontWeight: 'bold',
         marginLeft: 35,
     },
 
     titleText2: {
-        color: '#C99F7A',
+        color: COLORS.card.border,
         fontWeight: 'bold',
         marginLeft: 155
     },
@@ -387,7 +388,7 @@ const styles = StyleSheet.create({
     courseField3: {
         width: '75%',
         height: 73,
-        backgroundColor: '#EAE0D5',
+        backgroundColor: COLORS.background,
         borderRadius: 50,
     },
 
@@ -412,7 +413,7 @@ const styles = StyleSheet.create({
 
     termSurvival: {
         fontWeight: 'bold',
-        color: '#FFFFFF',
+        color: COLORS.text.light,
         marginTop: 50,
         fontSize: 15,
         marginLeft: 40,
@@ -421,7 +422,7 @@ const styles = StyleSheet.create({
     completed: {
         marginLeft: 110,
         fontWeight: 'bold',
-        color: '#FFFFFF',
+        color: COLORS.text.light,
         marginTop: 50,
         fontSize: 15
     },
@@ -439,7 +440,7 @@ const styles = StyleSheet.create({
     progressFill: {
         height: '100%',
         width: '75%',
-        backgroundColor: '#C99F7A',
+        backgroundColor: COLORS.card.border,
         borderRadius: 20,
     },
 
@@ -447,7 +448,7 @@ const styles = StyleSheet.create({
         width: 52,
         height: 52,
         borderRadius: 26,
-        backgroundColor: "#2C2521",
+        backgroundColor: COLORS.text.primary,
         justifyContent: "center",
         alignItems: "center",
         marginHorizontal: 6,
@@ -458,24 +459,24 @@ const styles = StyleSheet.create({
     },
 
     calendarDaySelected: {
-        backgroundColor: "#C99F7A",
+        backgroundColor: COLORS.card.border,
     },
 
     calendarDayText: {
-        color: "#FFFFFF",
+        color: COLORS.text.light,
         fontSize: 14,
         fontWeight: "600",
     },
 
     calendarDayTextActive: {
-        color: "#2C2521",
+        color: COLORS.text.primary,
         fontWeight: "800",
     },
 
     addNewCard: {
         width: "75%",
         height: 73,
-        backgroundColor: "#EAE0D5",
+        backgroundColor: COLORS.background,
         borderRadius: 50,
         justifyContent: "center",
         alignItems: "center",
@@ -486,7 +487,7 @@ const styles = StyleSheet.create({
     addNewText: {
         fontFamily: "NotoSerif_700Bold",
         fontSize: 18,
-        color: "#2C2521",
+        color: COLORS.text.primary,
     },
 
 });

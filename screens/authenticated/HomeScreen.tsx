@@ -22,15 +22,12 @@ import { getTasksByDate } from '../../services/taskService';
 import { getUserProfile } from '../../services/userService';
 import { useDateStore } from "../../store/dateStore";
 import { useTimerStore } from "../../store/timerStore";
+import { COLORS } from '../../theme/colors';
 import { formatDate, formatTimeHM, formatTimeLeft } from "../../utils/formatters";
 import { getCompletionPercent } from "../../utils/progressUtil";
 import { getIncompleteTasks, getVisibleTasks, sortByCreatedAt } from "../../utils/taskUtils";
 
-const COLORS = {
-  mocha: '#2C2521',
-  oatMilk: '#EAE0D5',
-  caramel: '#C99F7A',
-};
+
 
 type TabRoutes = "HomeScreen" | "HitList" | "LockIn" | "Profile";
 
@@ -125,7 +122,7 @@ export default function HomeScreen() {
     }, [tileAnims])
   );
 
-  if (!fontsLoaded) return <View style={{ flex: 1, backgroundColor: COLORS.mocha }} />;
+  if (!fontsLoaded) return <View style={{ flex: 1, backgroundColor: COLORS.primary }} />;
 
   // Format Current Date
   const formattedDate = formatDate(Date.now()).toUpperCase();
@@ -169,9 +166,9 @@ export default function HomeScreen() {
         </View>
         <View style={styles.avatarContainer}>
           <Image
-            source={{
-              uri: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCplS1NzplaUbeK3ZEKtydcpY_Q6jJdiLU0m7eePTh3kEjMSgU8HvGdM4OgVNUHUz7Op-uLvL-GRaOVK8VBlKxLc1bnJykha56k4sMMuOsHpbx1Y8fadoF-e7mKbvRZ9jDK8vW53x23RoTLFWxOh-m_5YfbYYj4ja0Oe3Ptufi7lZl8EcBG911QRlXVJJ8Q9XYuR84vOJaBDtwuEchrH7pcM9QVGw2lfb9O2RIgUFkVSKQPTQztMU3J8IPqBrK85kF_7mPGnlXTLes',
-            }}
+            source={
+              require('../../assets/images/cat.jpg')
+            }
             style={styles.avatarImage}
           />
         </View>
@@ -190,7 +187,7 @@ export default function HomeScreen() {
                   <Text style={styles.deepFocusTitle}>Morning Deep Focus</Text>
                 </View>
                 <View style={styles.deepFocusIconBadge}>
-                  <MaterialIcons name="timer" size={24} color={COLORS.oatMilk} />
+                  <MaterialIcons name="timer" size={24} color={COLORS.background} />
                 </View>
               </View>
 
@@ -237,7 +234,7 @@ export default function HomeScreen() {
               <Animated.View style={[getTileStyle(2), { flex: 1 }]}>
                 <AnimatedCard style={styles.priorityCard}>
                   <View>
-                    <MaterialIcons name="bookmark" size={24} color={COLORS.mocha} style={{ marginBottom: 12 }} />
+                    <MaterialIcons name="bookmark" size={24} color={COLORS.primary} style={{ marginBottom: 12 }} />
                     <Text style={styles.priorityTitle}>Priority Objectives</Text>
                   </View>
                   <View style={styles.priorityList}>
@@ -289,7 +286,7 @@ export default function HomeScreen() {
                 <MaterialIcons
                   name="local-fire-department"
                   size={20}
-                  color={COLORS.caramel}
+                  color={COLORS.accent}
                   style={{ marginTop: 8 }}
                 />
               </AnimatedCard>
@@ -299,7 +296,7 @@ export default function HomeScreen() {
             <Animated.View style={[getTileStyle(4), { flex: 1 }]}>
               <AnimatedCard style={styles.dateCard}>
                 <View style={styles.dateTopRow}>
-                  <MaterialIcons name="calendar-today" size={18} color={COLORS.caramel} />
+                  <MaterialIcons name="calendar-today" size={18} color={COLORS.accent} />
                   <Text style={styles.dateTodayLabel}>TODAY</Text>
                 </View>
                 <View style={styles.dateBottomRow}>
@@ -318,7 +315,7 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: COLORS.mocha,
+    backgroundColor: COLORS.primary,
   },
   contentContainer: {
     paddingHorizontal: 16,
@@ -342,14 +339,14 @@ const styles = StyleSheet.create({
   headerHeadline: {
     fontFamily: 'NotoSerif_700Bold',
     fontSize: 32,
-    color: COLORS.oatMilk,
+    color: COLORS.background,
     marginBottom: 4,
     letterSpacing: -0.5,
   },
   headerSubtitle: {
     fontFamily: 'Inter_300Light',
     fontSize: 18,
-    color: `${COLORS.oatMilk}CC`, // 80% opacity
+    color: `${COLORS.background}CC`, // 80% opacity
     fontStyle: 'italic',
     letterSpacing: 0.5,
   },
@@ -358,7 +355,7 @@ const styles = StyleSheet.create({
     height: 48,
     borderRadius: 24,
     borderWidth: 1,
-    borderColor: `${COLORS.caramel}4D`, // 30% opacity
+    borderColor: `${COLORS.accent}4D`, // 30% opacity
     overflow: 'hidden',
   },
   avatarImage: {
@@ -386,7 +383,7 @@ const styles = StyleSheet.create({
 
   /* Widget 1: Deep Focus */
   deepFocusCard: {
-    backgroundColor: COLORS.oatMilk,
+    backgroundColor: COLORS.background,
     borderRadius: 40,
     padding: 24,
     minHeight: 220,
@@ -401,7 +398,7 @@ const styles = StyleSheet.create({
   deepFocusLabel: {
     fontFamily: 'Inter_600SemiBold',
     fontSize: 9,
-    color: `${COLORS.mocha}99`, // 60% opacity
+    color: `${COLORS.primary}99`, // 60% opacity
     textTransform: 'uppercase',
     letterSpacing: 2,
     marginBottom: 4,
@@ -409,13 +406,13 @@ const styles = StyleSheet.create({
   deepFocusTitle: {
     fontFamily: 'NotoSerif_700Bold',
     fontSize: 22,
-    color: COLORS.mocha,
+    color: COLORS.primary,
   },
   deepFocusIconBadge: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: COLORS.mocha,
+    backgroundColor: COLORS.primary,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -432,26 +429,26 @@ const styles = StyleSheet.create({
     width: 4,
     height: 4,
     borderRadius: 2,
-    backgroundColor: COLORS.caramel,
+    backgroundColor: COLORS.accent,
   },
   taskText: {
     fontFamily: 'NotoSerif_400Regular',
     fontSize: 13,
     fontStyle: 'italic',
-    color: COLORS.mocha,
+    color: COLORS.primary,
   },
   progressSection: {
     marginTop: 'auto',
   },
   progressBarTrack: {
     height: 4,
-    backgroundColor: `${COLORS.mocha}1A`, // 10% opacity
+    backgroundColor: `${COLORS.primary}1A`, // 10% opacity
     borderRadius: 2,
     marginBottom: 12,
   },
   progressBarFill: {
     height: '100%',
-    backgroundColor: COLORS.caramel,
+    backgroundColor: COLORS.accent,
     borderRadius: 2,
   },
   progressLabels: {
@@ -461,14 +458,14 @@ const styles = StyleSheet.create({
   progressLabelText: {
     fontFamily: 'Inter_600SemiBold',
     fontSize: 9,
-    color: `${COLORS.mocha}66`, // 40% opacity
+    color: `${COLORS.primary}66`, // 40% opacity
     textTransform: 'uppercase',
     letterSpacing: 1.5,
   },
 
   /* Widget 3: Priority Objectives */
   priorityCard: {
-    backgroundColor: COLORS.caramel,
+    backgroundColor: COLORS.accent,
     borderRadius: 24,
     padding: 20,
     minHeight: 200,
@@ -480,7 +477,7 @@ const styles = StyleSheet.create({
   priorityTitle: {
     fontFamily: 'NotoSerif_700Bold',
     fontSize: 20,
-    color: COLORS.mocha,
+    color: COLORS.primary,
     lineHeight: 24,
   },
   priorityList: {
@@ -494,19 +491,19 @@ const styles = StyleSheet.create({
   priorityItemText: {
     fontFamily: 'Inter_600SemiBold',
     fontSize: 11,
-    color: COLORS.mocha,
+    color: COLORS.primary,
     textTransform: 'uppercase',
     letterSpacing: -0.3,
   },
   priorityItemTime: {
     fontFamily: 'Inter_600SemiBold',
     fontSize: 11,
-    color: `${COLORS.mocha}99`, // 60% opacity
+    color: `${COLORS.primary}99`, // 60% opacity
   },
 
   /* Widget 4: Day Streak */
   streakCard: {
-    backgroundColor: COLORS.oatMilk,
+    backgroundColor: COLORS.background,
     borderRadius: 24,
     padding: 16,
     alignItems: 'center',
@@ -517,13 +514,13 @@ const styles = StyleSheet.create({
   streakNumber: {
     fontFamily: 'NotoSerif_700Bold',
     fontSize: 30,
-    color: COLORS.mocha,
+    color: COLORS.primary,
     lineHeight: 34,
   },
   streakLabel: {
     fontFamily: 'Inter_600SemiBold',
     fontSize: 9,
-    color: `${COLORS.mocha}99`, // 60% opacity
+    color: `${COLORS.primary}99`, // 60% opacity
     textTransform: 'uppercase',
     letterSpacing: 1.5,
     marginTop: 4,
@@ -531,12 +528,12 @@ const styles = StyleSheet.create({
 
   /* Widget 5: Date */
   dateCard: {
-    backgroundColor: COLORS.mocha,
+    backgroundColor: COLORS.primary,
     borderRadius: 24,
     padding: 16,
     justifyContent: 'space-between',
     borderWidth: 1,
-    borderColor: `${COLORS.oatMilk}1A`, // 10% opacity
+    borderColor: `${COLORS.background}1A`, // 10% opacity
     width: '100%',
     flex: 1, // fill bottom half
   },
@@ -549,7 +546,7 @@ const styles = StyleSheet.create({
   dateTodayLabel: {
     fontFamily: 'Inter_600SemiBold',
     fontSize: 10,
-    color: `${COLORS.oatMilk}66`, // 40% opacity
+    color: `${COLORS.background}66`, // 40% opacity
     letterSpacing: -0.5,
   },
   dateBottomRow: {
@@ -558,6 +555,6 @@ const styles = StyleSheet.create({
   dateText: {
     fontFamily: 'NotoSerif_700Bold',
     fontSize: 18,
-    color: COLORS.oatMilk,
+    color: COLORS.background,
   },
 });

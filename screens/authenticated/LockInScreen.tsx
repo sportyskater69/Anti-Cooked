@@ -202,7 +202,7 @@ export default function LockInScreen() {
                         style={{
                             width: "80%",
                             height: 55,
-                            backgroundColor: "#C99F7A",
+                            backgroundColor: COLORS.accent,
                             borderRadius: 30,
                             justifyContent: "center",
                             alignItems: "center",
@@ -347,7 +347,7 @@ const styles = StyleSheet.create({
 
     modalCard: {
         width: "85%",
-        backgroundColor: "#EAE0D5",
+        backgroundColor: COLORS.background,
         borderRadius: 30,
         paddingVertical: 30,
         paddingHorizontal: 20,
@@ -378,7 +378,7 @@ const styles = StyleSheet.create({
 
     modalButton: {
         flex: 1,
-        backgroundColor: "#C99F7A",
+        backgroundColor: COLORS.accent,
         paddingVertical: 14,
         borderRadius: 20,
         marginRight: 10,
@@ -411,7 +411,7 @@ const styles = StyleSheet.create({
     deepwork: {
         fontFamily: 'NotoSerif_800ExtraBold',
         fontSize: 13,
-        color: '#75706B',
+        color: COLORS.text.secondary,
         textAlign: 'center',
 
     },
@@ -428,7 +428,7 @@ const styles = StyleSheet.create({
 
     nextup: {
         fontFamily: 'NotoSerif_400Regular',
-        backgroundColor: '#DCC5AF',
+        backgroundColor: COLORS.accent,
         fontSize: 12,
         marginTop: 10,
         borderRadius: 30,
@@ -441,7 +441,7 @@ const styles = StyleSheet.create({
     nextuptext: {
         fontFamily: 'NotoSerif_400Regular',
         marginTop: 6,
-        color: '#5A4E45'
+        color: COLORS.text.primary
     },
 
     // > logo must be added
@@ -449,7 +449,7 @@ const styles = StyleSheet.create({
     commenceFocus: {
         width: '39%',
         height: 46,
-        backgroundColor: '#C99F7A',
+        backgroundColor: COLORS.accent,
         marginTop: 25,
         borderRadius: 30,
 
@@ -462,7 +462,7 @@ const styles = StyleSheet.create({
     resetSession: {
         width: "39%",
         height: 46,
-        backgroundColor: "#C99F7A",
+        backgroundColor: COLORS.accent,
         marginTop: 25,
         borderRadius: 30,
 
@@ -487,7 +487,7 @@ const styles = StyleSheet.create({
     },
 
     box: {
-        backgroundColor: '#EAE0D5',
+        backgroundColor: COLORS.background,
         padding: 20,
         borderRadius: 50,
         width: '82%',
@@ -499,30 +499,23 @@ const styles = StyleSheet.create({
     text: {
         fontFamily: 'NotoSerif_700Bold',
         fontSize: 25,
-        color: 'white'
+        color: COLORS.text.light
     },
 
     achivementTimeline: {
         width: "96%",
         height: 545,
         borderRadius: 48,
-        backgroundColor: '#211A16',
+        backgroundColor: COLORS.primary,
         marginTop: 40,
         overflow: "hidden"
     },
 
     achivementTimelineText: {
         fontSize: 24,
-        color: '#FFFFFF',
+        color: COLORS.text.light,
         fontFamily: 'NotoSerif_700Bold',
         marginTop: 40,
         marginLeft: 35,
-    },
-
-    date: {
-        marginTop: 10,
-        color: '#685E57',
-        fontSize: 12,
-        letterSpacing: 1.2,
     },
 });

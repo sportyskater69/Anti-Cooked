@@ -9,6 +9,7 @@ import ScreenWrapper from '../../components/ScreenWrapper';
 import { auth } from '../../config/firebaseConfig';
 import { logOut } from '../../services/authService';
 import { getUserProfile, updateUserProfile } from '../../services/userService';
+import { COLORS } from '../../theme/colors';
 
 
 const ProfileEditorScreen = () => {
@@ -239,7 +240,7 @@ const styles = StyleSheet.create({
         width: 152,
         height: 152,
         borderRadius: 76,
-        backgroundColor: '#EAE0D5', // Fallback color
+        backgroundColor: COLORS.background, // Fallback color
     },
     editAvatarButton: {
         position: 'absolute',
@@ -248,7 +249,7 @@ const styles = StyleSheet.create({
         width: 40,
         height: 40,
         borderRadius: 20,
-        backgroundColor: '#c99f7a',
+        backgroundColor: COLORS.accent,
         justifyContent: 'center',
         alignItems: 'center',
         shadowColor: 'rgba(24,18,15, 0.4)',
@@ -271,7 +272,7 @@ const styles = StyleSheet.create({
     // --- Form Card ---
     formCard: {
         width: '100%',
-        backgroundColor: '#EAE0D5',
+        backgroundColor: COLORS.background,
         borderRadius: 24,
         padding: 32,
         gap: 32,
@@ -304,7 +305,7 @@ const styles = StyleSheet.create({
     saveButton: {
         width: '100%',
         height: 64,
-        backgroundColor: '#c99f7a',
+        backgroundColor: COLORS.accent,
         borderRadius: 24,
         flexDirection: 'row',
         justifyContent: 'center',
